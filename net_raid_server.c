@@ -68,7 +68,6 @@ int main(int argc, char **argv){
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
         printf("%s\n", "here 4");
         switch(fork()) {
-        	printf("%s\n", "here 5");
             case -1:
                 return -1; // error
             case 0:

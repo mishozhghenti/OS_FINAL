@@ -35,14 +35,12 @@ int main(int argc, char **argv){
 	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	return 0;*/
 
+
 	/*logger_init("log.txt");
-	
 	log_message("1");
 	log_message("message 2");
 	log_message("random message for now :)))");
-
 	logger_deinit();
-
 	return 0;*/
 
  /*	int sfd;
@@ -166,12 +164,12 @@ int main(int argc, char **argv){
 
 				    if(is_connected==0){ // successful connection
 				    	if(i==num_servers-1){// hotswap server
-				    		char msg [strlen(diskname)+strlen(servers[i].port)+strlen(servers[i].ip)+28];
+				    		char msg [strlen(diskname)+strlen(servers[i].port)+strlen(servers[i].ip)+28];// include endln symbol
 							sprintf(msg, "%s %s:%s hotswap server connected", diskname, servers[i].ip, servers[i].port);
 							log_message(msg);
 				    	}else{
 				    		char msg [strlen(diskname)+strlen(servers[i].port)+strlen(servers[i].ip)+19];
-							sprintf(msg, "%s %s:%s open connection", diskname, servers[i].ip, servers[i].port); // include endln symbol
+							sprintf(msg, "%s %s:%s open connection", diskname, servers[i].ip, servers[i].port); 
 							log_message(msg);
 				    	}
 				    }else{ // connection failed
