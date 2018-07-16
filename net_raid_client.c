@@ -33,7 +33,7 @@ struct Client client;
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
-static int hello_getattr(const char *path, struct stat *stbuf)
+static int my_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
 
@@ -51,7 +51,7 @@ static int hello_getattr(const char *path, struct stat *stbuf)
 	return res;
 }
 
-static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 			 off_t offset, struct fuse_file_info *fi)
 {
 	(void) offset;
@@ -67,7 +67,7 @@ static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	return 0;
 }
 
-static int hello_open(const char *path, struct fuse_file_info *fi)
+static int my_open(const char *path, struct fuse_file_info *fi)
 {
 	if (strcmp(path, hello_path) != 0)
 		return -ENOENT;
@@ -78,7 +78,7 @@ static int hello_open(const char *path, struct fuse_file_info *fi)
 	return 0;
 }
 
-static int hello_read(const char *path, char *buf, size_t size, off_t offset,
+static int my_read(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
 	size_t len;
@@ -98,10 +98,10 @@ static int hello_read(const char *path, char *buf, size_t size, off_t offset,
 }
 
 static struct fuse_operations all_methods = {
-	.getattr	= hello_getattr,
-	.readdir	= hello_readdir,
-	.open		= hello_open,
-	.read		= hello_read,
+	.getattr	= my_getattr,
+	.readdir	= my_readdir,
+	.open		= my_open,
+	.read		= my_read,
 };
 //-----------------------------------------------------------------------------------------
 
