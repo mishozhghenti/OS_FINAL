@@ -28,6 +28,82 @@ int servers_sfd [10];
 struct Server servers[10];
 struct Client client;
 
+//-----------------------------------FUSE---------------------------------------------
+
+static const char *hello_str = "Hello World!\n";
+static const char *hello_path = "/hello";
+
+static int hello_getattr(const char *path, struct stat *stbuf)
+{
+	int res = 0;
+
+	memset(stbuf, 0, sizeof(struct stat));
+	if (strcmp(path, "/") == 0) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 2;
+	} else if (strcmp(path, hello_path) == 0) {
+		stbuf->st_mode = S_IFREG | 0444;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = strlen(hello_str);
+	} else
+		res = -ENOENT;
+
+	return res;
+}
+
+static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+			 off_t offset, struct fuse_file_info *fi)
+{
+	(void) offset;
+	(void) fi;
+
+	if (strcmp(path, "/") != 0)
+		return -ENOENT;
+
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
+	filler(buf, hello_path + 1, NULL, 0);
+
+	return 0;
+}
+
+static int hello_open(const char *path, struct fuse_file_info *fi)
+{
+	if (strcmp(path, hello_path) != 0)
+		return -ENOENT;
+
+	if ((fi->flags & 3) != O_RDONLY)
+		return -EACCES;
+
+	return 0;
+}
+
+static int hello_read(const char *path, char *buf, size_t size, off_t offset,
+		      struct fuse_file_info *fi)
+{
+	size_t len;
+	(void) fi;
+	if(strcmp(path, hello_path) != 0)
+		return -ENOENT;
+
+	len = strlen(hello_str);
+	if (offset < len) {
+		if (offset + size > len)
+			size = len - offset;
+		memcpy(buf, hello_str + offset, size);
+	} else
+		size = 0;
+
+	return size;
+}
+
+static struct fuse_operations all_methods = {
+	.getattr	= hello_getattr,
+	.readdir	= hello_readdir,
+	.open		= hello_open,
+	.read		= hello_read,
+};
+//-----------------------------------------------------------------------------------------
 
 int main(int argc, char **argv){
 
@@ -139,13 +215,11 @@ int main(int argc, char **argv){
 				for (int i = 0; i < num_servers; i++){
 					/*char msg [strlen(diskname)+strlen(servers[i].port)+strlen(servers[i].ip)+3];
 					sprintf(msg, "%s %s %s", diskname, servers[i].ip, servers[i].port);
-
 					log_message(msg);*/
 
 					/*log_message(diskname);
 					log_message(servers[i].ip);
 					log_message(servers[i].port);*/
-					//printf("%s\n", msg);
 
 					
 				    struct sockaddr_in addr;
@@ -187,8 +261,16 @@ int main(int argc, char **argv){
 
 
 				// TODO mountpoints
-
-
+				int mounted_successfully = fuse_main(argc, argv, &all_methods, NULL);
+				if(mounted_successfully==0){
+					char msg [strlen(diskname)+strlen(mount_point)+32];// include endln symbol
+					sprintf(msg, "%s mountpointed successfully to: %s", diskname, mount_point);
+					log_message(msg);
+				}else{ //failed
+					char msg [strlen(diskname)+strlen(mount_point)+24];
+					sprintf(msg, "%s failed mountpoint to: %s", diskname, mount_point);
+					log_message(msg);
+				}
 				printf("%s end %d\n", "___________________",getpid());
 				break;	
 			}else{
