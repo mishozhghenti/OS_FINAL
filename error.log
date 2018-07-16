@@ -1,0 +1,7 @@
+[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10011 connection failed
+[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10012 connection failed
+[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10013 connection failed
+[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:22222 hotswap server connection failed
+[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:10001 connection failed
+[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:10002 open connection
+[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:11111 hotswap server connection failed
