@@ -106,7 +106,6 @@ static struct fuse_operations all_methods = {
 //-----------------------------------------------------------------------------------------
 
 int main(int argc, char **argv){
-
 	/*printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	return 0;*/
@@ -261,6 +260,8 @@ int main(int argc, char **argv){
 
 
 				// TODO mountpoints
+				argv[1]=mount_point; // set to argv mountpoint directory
+
 				int mounted_successfully = fuse_main(argc, argv, &all_methods, NULL);
 				if(mounted_successfully==0){
 					char msg [strlen(diskname)+strlen(mount_point)+32];// include endln symbol

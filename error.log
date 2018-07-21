@@ -1,7 +1,9 @@
-[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10011 connection failed
-[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10012 connection failed
-[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:10013 connection failed
-[Mon Jul 16 00:55:07 2018] STORAGE2 127.0.0.1:22222 hotswap server connection failed
-[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:10001 connection failed
-[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:10002 open connection
-[Mon Jul 16 00:55:07 2018] STORAGE1 127.0.0.1:11111 hotswap server connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE2 127.0.0.1:10011 connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE2 127.0.0.1:10012 connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE2 127.0.0.1:10013 connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE2 127.0.0.1:22222 hotswap server connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE2 failed mountpoint to: /path/to/mountpoint2
+[Sun Jul 22 01:28:57 2018] STORAGE1 127.0.0.1:10001 connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE1 127.0.0.1:10002 connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE1 127.0.0.1:11111 hotswap server connection failed
+[Sun Jul 22 01:28:57 2018] STORAGE1 failed mountpoint to: /path/to/mountpoint1
