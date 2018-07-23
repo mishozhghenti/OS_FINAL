@@ -33,10 +33,9 @@ struct Client client;
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
-static int my_getattr(const char *path, struct stat *stbuf)
-{
+static int my_getattr(const char *path, struct stat *stbuf){
 	int res = 0;
-
+	printf("%d %s %s %s\n",getpid(), diskname, "getattr",path);
 	memset(stbuf, 0, sizeof(struct stat));
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
@@ -51,41 +50,67 @@ static int my_getattr(const char *path, struct stat *stbuf)
 	return res;
 }
 
-static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi)
-{
+static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
 	(void) offset;
 	(void) fi;
 
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
+	/*if (strcmp(path, "/") != 0)
+		return -ENOENT;*/
+	printf("%d %s %s %s\n", getpid(),diskname, "readdir",path);
 
+/*
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, hello_path + 1, NULL, 0);
+	filler(buf, hello_path + 1, NULL, 0);*/
 
+
+	char request [strlen("readdir")+strlen(path)+2];
+	sprintf(request, "%s %s", "readdir", path);
+
+	write(servers_sfd[0], request, strlen(request));
+	char response[1024];
+
+	int data_size = read(servers_sfd[0],&response,1024);
+	response[data_size]='\0';
+	//printf(">>>>>>>>>>>>> Client recieved response: %s\n",response);
+
+	const char s[2] =" ";
+   	char *token;
+	token = strtok(response, s);
+	while( token != NULL ) {
+		printf( "Client readdir tokens: %s\n", token );
+		filler(buf,token,NULL,0);
+	    token = strtok(NULL, s);
+	}
 	return 0;
 }
 
-static int my_open(const char *path, struct fuse_file_info *fi)
-{
-	if (strcmp(path, hello_path) != 0)
+static int my_open(const char *path, struct fuse_file_info *fi){
+	printf("%d %s %s %s\n", getpid(),diskname, "open",path);
+
+	char request [strlen("open")+strlen(path)+2];
+	sprintf(request, "%s %s", "open", path);
+
+	write(servers_sfd[0], request, strlen(request));
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	return res;
+
+	/*if (strcmp(path, hello_path) != 0)
 		return -ENOENT;
 
 	if ((fi->flags & 3) != O_RDONLY)
 		return -EACCES;
 
-	return 0;
+	return 0;*/
 }
 
-static int my_read(const char *path, char *buf, size_t size, off_t offset,
-		      struct fuse_file_info *fi)
-{
+static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	size_t len;
 	(void) fi;
 	if(strcmp(path, hello_path) != 0)
 		return -ENOENT;
-
+	printf("%d %s %s %s\n",getpid(), diskname, "read",path);
 	len = strlen(hello_str);
 	if (offset < len) {
 		if (offset + size > len)
@@ -139,7 +164,7 @@ int main(int argc, char **argv){
 
     return 0;*/
 
-	if(argc!=2){
+	if(argc<2){
 		printf("Wrong parameters.\nYou should only pass: Configuration File Direction\n");
 		exit(0);
 	}
@@ -257,22 +282,21 @@ int main(int argc, char **argv){
 				    	}
 				    }
 				}
-
-
-				// TODO mountpoints
-				argv[1]=mount_point; // set to argv mountpoint directory
-
-				int mounted_successfully = fuse_main(argc, argv, &all_methods, NULL);
-				if(mounted_successfully==0){
-					char msg [strlen(diskname)+strlen(mount_point)+32];// include endln symbol
-					sprintf(msg, "%s mountpointed successfully to: %s", diskname, mount_point);
-					log_message(msg);
-				}else{ //failed
-					char msg [strlen(diskname)+strlen(mount_point)+24];
-					sprintf(msg, "%s failed mountpoint to: %s", diskname, mount_point);
-					log_message(msg);
+				
+				char* new_argv[3];
+				new_argv[0]=argv[0];
+				new_argv[1]=strdup(mount_point);// set to argv mountpoint directory
+				if(argc==3){
+					new_argv[2]=strdup(argv[2]);// -f flag
 				}
+
+				char msg [strlen(diskname)+strlen(mount_point)+20];
+				sprintf(msg, "%s mountpointing to: %s", diskname, mount_point);
+				log_message(msg);
+				
+				fuse_main(argc, new_argv, &all_methods, NULL);   // TODO return -1 if can not mountain
 				printf("%s end %d\n", "___________________",getpid());
+
 				break;	
 			}else{
 				//parent

@@ -87,3 +87,25 @@ char* get_time(){
     return strdup(res);
 }
 
+char* get_command_name(char * s){
+	char* new_s=strdup(s);
+	for (int i = 0; i < strlen(new_s); i++)
+	{
+		if(new_s[i]==' '){
+			new_s[i]='\0';
+			break;
+		}
+	}
+	return strdup(new_s);
+}
+
+char* get_command_param(char* s){
+	int i=0;
+	for(i=0;i<strlen(s);i++){
+		if(s[i]==' '){
+			break;
+		}
+	}
+	char* res = strdup(&s[i+1]);
+	return res;
+}

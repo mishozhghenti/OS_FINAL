@@ -6,9 +6,16 @@
 #include <netinet/ip.h> /* superset of previous */
 #include <unistd.h>
 #include "utils.h"
+#include <fcntl.h>
+#include <dirent.h>
 #define true 1
 #define BACKLOG 10
 
+char* param_ip;
+char* param_port;
+char* param_direction;
+
+struct dirent *readdir(DIR *dirp);
 
 void client_handler(int cfd) {
     char buf[1024];
@@ -18,18 +25,66 @@ void client_handler(int cfd) {
         if (data_size <= 0){
             break;
         }
+        buf[data_size]='\0'; // endl symbol
 
-        write (cfd, &buf, data_size);
-        
-        printf("Recieved sms: %s\n",buf );
+        printf("Recieved sms size: %d\n",data_size);
+        printf("Recieved sms: %s\n",buf);
+
+        char* current_command = get_command_name(buf);
+        printf("current command: %s\n",current_command);
+       
+
+        if(strcmp(current_command,"readdir")==0){
+            printf("%s\n", "Server Readdir command");
+             char* current_params =get_command_param(buf);
+            //printf("current param: %s\n",current_params);
+
+            char current_path [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current_path, "%s%s", param_direction, current_params);
+
+            printf("full current command: %s\n",current_path );
+            // TODO readdir impl.
+
+            DIR *d;
+            d = opendir(current_path);
+            char res[1024];
+            int res_size=0;
+
+            while(true){
+                struct dirent * entry;
+                const char * d_name;
+                entry =readdir(d);
+                if(! entry){ break; }
+
+                d_name =entry->d_name;
+                strcpy(res+res_size,d_name);
+                res_size+=strlen(d_name);
+                res[res_size]=' ';
+                res_size+=1;
+                printf("llllll>>>>>>>>>>> %s\n", d_name);
+            }
+            res_size-=1;
+            res[res_size]='\0';
+            printf("finaaaaaaaaaal whole stirng: %s\n",res);
+            printf("finaaaaaaaaaal |%s| %d\n",res,res_size);
+
+            printf("Server sent response: %s\n", res);
+            write (cfd, &res, res_size);
+        }else if(strcmp(current_command,"open")==0){
+            printf("%s\n", "Server OPEN command");
+            char* current_params =get_command_param(buf);
+            //printf("current param: %s\n",current_params);
+            char current [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current, "%s%s", param_direction, current_params);
+            int res = open(current,0);
+            write (cfd, &res, sizeof(int));
+        }
     }
     close(cfd);
 }
 
 
-char* param_ip;
-char* param_port;
-char* param_direction;
+
 
 int main(int argc, char **argv){
 	if(argc!=4){

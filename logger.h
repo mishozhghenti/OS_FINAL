@@ -36,7 +36,6 @@ void log_message(char* msg){
 	}
 
 	res[strlen(msg)+strlen(current_time_str)+1]='\0';
-	//printf("%s\n", res);
 	fprintf(f, "%s\n",strdup(res));
 }
 
