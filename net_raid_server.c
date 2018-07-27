@@ -8,6 +8,7 @@
 #include "utils.h"
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #define true 1
 #define BACKLOG 10
 
@@ -61,14 +62,14 @@ void client_handler(int cfd) {
                 res_size+=strlen(d_name);
                 res[res_size]=' ';
                 res_size+=1;
-                printf("llllll>>>>>>>>>>> %s\n", d_name);
+               // printf("llllll>>>>>>>>>>> %s\n", d_name);
             }
             res_size-=1;
             res[res_size]='\0';
-            printf("finaaaaaaaaaal whole stirng: %s\n",res);
-            printf("finaaaaaaaaaal |%s| %d\n",res,res_size);
+            //printf("finaaaaaaaaaal whole stirng: %s\n",res);
+            //printf("finaaaaaaaaaal |%s| %d\n",res,res_size);
 
-            printf("Server sent response: %s\n", res);
+           // printf("Server sent response: %s\n", res);
             write (cfd, &res, res_size);
         }else if(strcmp(current_command,"open")==0){
             printf("%s\n", "Server OPEN command");
@@ -78,6 +79,27 @@ void client_handler(int cfd) {
             sprintf(current, "%s%s", param_direction, current_params);
             int res = open(current,0);
             write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"getattr")==0){
+            printf("%s\n", "Server got getattr<<<<<<<<<<<<<<");
+
+            char* current_params =get_command_param(buf);
+            char current_path [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current_path, "%s%s", param_direction, current_params);
+            printf("%s\n", "here 1");
+
+            printf("current path%s\n", current_path);
+
+            struct stat fileStat;
+            int file=0;
+            file=open(current_path,O_RDONLY);
+            printf("here 2: %d\n", file);
+
+            //fstat(file,&fileStat);
+            printf("here 3: ") ;
+
+            write (cfd, &fileStat, sizeof(stat));
+            printf("here 4: ") ;
+
         }
     }
     close(cfd);

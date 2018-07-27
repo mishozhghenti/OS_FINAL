@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h> /* superset of previous */
 #include <arpa/inet.h>
+#include <sys/stat.h>
 #define true 1
 
 char* diskname;
@@ -29,14 +30,32 @@ struct Server servers[10];
 struct Client client;
 
 //-----------------------------------FUSE---------------------------------------------
-
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
 static int my_getattr(const char *path, struct stat *stbuf){
 	int res = 0;
 	printf("%d %s %s %s\n",getpid(), diskname, "getattr",path);
+
+
+
+
 	memset(stbuf, 0, sizeof(struct stat));
+
+
+	char request [strlen("getattr")+strlen(path)+2];
+	sprintf(request, "%s %s", "getattr", path);
+	printf("current :::::::::::::::::::::::::::%s\n",servers[0].port );
+	write(servers_sfd[0], request, strlen(request));
+
+	struct stat fileStat;
+
+	read(servers_sfd[0],&fileStat,sizeof(stat));
+
+	struct stat* cp=malloc(sizeof(stat));
+	memcpy(cp,&fileStat,sizeof(stat));
+	stbuf=cp;
+	/*
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
@@ -45,7 +64,7 @@ static int my_getattr(const char *path, struct stat *stbuf){
 		stbuf->st_nlink = 1;
 		stbuf->st_size = strlen(hello_str);
 	} else
-		res = -ENOENT;
+		res = -ENOENT;*/
 
 	return res;
 }
