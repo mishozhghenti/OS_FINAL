@@ -37,11 +37,7 @@ static int my_getattr(const char *path, struct stat *stbuf){
 	int res = 0;
 	printf("%d %s %s %s\n",getpid(), diskname, "getattr",path);
 
-
-
-
 	memset(stbuf, 0, sizeof(struct stat));
-
 
 	char request [strlen("getattr")+strlen(path)+2];
 	sprintf(request, "%s %s", "getattr", path);
@@ -127,9 +123,9 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	size_t len;
 	(void) fi;
+	printf("%d %s %s %s\n",getpid(), diskname, "read",path);
 	if(strcmp(path, hello_path) != 0)
 		return -ENOENT;
-	printf("%d %s %s %s\n",getpid(), diskname, "read",path);
 	len = strlen(hello_str);
 	if (offset < len) {
 		if (offset + size > len)
@@ -141,11 +137,60 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 	return size;
 }
 
+static int my_rename(const char* from, const char* to){
+
+	return 0;
+}
+
+
+static int my_unlink(const char* path){
+
+	return 0;
+
+}
+static int my_release(const char* path, struct fuse_file_info *fi){
+
+	return 0;
+}
+
+static int my_rmdir(const char* path){
+	return 0;
+}
+
+static int my_mkdir(const char* path, mode_t mode){
+	return 0;
+}
+
+static int my_opendir(const char* path, struct fuse_file_info* fi){
+	return 0;
+}
+
+static int my_releasedir(const char* path, struct fuse_file_info *fi){
+	return 0;
+}
+
+static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	return 0;
+}
+
+static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
+
+	return 0;
+}
 static struct fuse_operations all_methods = {
 	.getattr	= my_getattr,
 	.readdir	= my_readdir,
 	.open		= my_open,
 	.read		= my_read,
+	.rename     = my_rename,
+	.unlink     = my_unlink,
+	.release    = my_release,
+	.rmdir      = my_rmdir,
+	.mkdir      = my_mkdir,
+	.opendir    = my_opendir,
+	.releasedir = my_releasedir,
+	.create     = my_create,
+	.write      = my_write,
 };
 //-----------------------------------------------------------------------------------------
 
