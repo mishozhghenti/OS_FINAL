@@ -195,6 +195,9 @@ static struct fuse_operations all_methods = {
 //-----------------------------------------------------------------------------------------
 
 int main(int argc, char **argv){
+
+	
+
 	/*printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	return 0;*/
@@ -347,11 +350,10 @@ int main(int argc, char **argv){
 				    }
 				}
 				
-				char* new_argv[3];
-				new_argv[0]=argv[0];
-				new_argv[1]=strdup(mount_point);// set to argv mountpoint directory
-				if(argc==3){
-					new_argv[2]=strdup(argv[2]);// -f flag
+
+				char* new_argv[argc];
+				for (int i = 0; i < argc; i++){
+					new_argv[i]=strdup(argv[i]);
 				}
 
 				char msg [strlen(diskname)+strlen(mount_point)+20];
