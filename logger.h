@@ -11,7 +11,7 @@ int logger_init(char* s){
 	file_name= strdup(s);
 	f=fopen(file_name,"w");
 	if(f==NULL){
-		printf("%s\n", "Can not open the file");
+		printf("%s\n", "Can not open the logger file");
 		return -1;
 	}
 	return 0;
