@@ -109,3 +109,33 @@ char* get_command_param(char* s){
 	char* res = strdup(&s[i+1]);
 	return res;
 }
+
+int get_mode(char* s){
+	int res=0;
+	for (int i = 0; i < strlen(s); ++i){
+		if(s[i]==' '){
+			i+=1;
+		}
+		if(i==2){
+			res = s[i+1]-'0';
+			break;
+		}
+	}
+	return res;
+}
+
+int get_flags(char* s){
+	int res=0;
+	for (int i = 0; i < strlen(s); ++i){
+		if(s[i]==' '){
+			i+=1;
+		}
+		if(i==3){
+			res = s[i+1]-'0';
+			break;
+		}
+	}
+	return res;
+}
+
+

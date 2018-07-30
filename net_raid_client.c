@@ -16,6 +16,7 @@
 #include <netinet/ip.h> /* superset of previous */
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #define true 1
 
 char* diskname;
@@ -109,6 +110,9 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	write(servers_sfd[0], request, strlen(request));
 	int res;
 	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
 	return res;
 
 	/*if (strcmp(path, hello_path) != 0)
@@ -118,6 +122,116 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 		return -EACCES;
 
 	return 0;*/
+}
+
+
+static int my_rename(const char* from, const char* to){
+	printf("%d %s %s %s %s\n",getpid(), diskname, "rename",from,to);
+
+	char request [strlen("rename")+strlen(from)+strlen(to)+3];
+	sprintf(request, "%s %s %s", "rename", from, to);
+
+	write(servers_sfd[0], request, strlen(request));
+
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
+	return res;
+}
+
+static int my_unlink(const char* path){
+	printf("%d %s %s %s\n",getpid(), diskname, "unlink",path);
+
+	char request [strlen("unlink")+strlen(path)+2];
+	sprintf(request, "%s %s", "unlink", path);
+	
+	write(servers_sfd[0], request, strlen(request));
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
+	return res;
+}
+
+static int my_release(const char* path, struct fuse_file_info *fi){
+	printf("%d %s %s %s\n",getpid(), diskname, "release",path);
+	(void) path;
+	(void) fi;
+	return 0;
+}
+
+static int my_rmdir(const char* path){
+	printf("%d %s %s %s\n",getpid(), diskname, "rmdir",path);
+
+	char request [strlen("rmdir")+strlen(path)+2];
+	sprintf(request, "%s %s", "rmdir", path);
+
+	write(servers_sfd[0], request, strlen(request));
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
+	return res;
+}
+
+static int my_mkdir(const char* path, mode_t mode){
+	printf("%d %s %s %s\n",getpid(), diskname, "mkdir",path);
+
+	char request [strlen("mkdir")+strlen(path)+2];
+	sprintf(request, "%s %s", "mkdir", path);
+
+	write(servers_sfd[0], request, strlen(request));
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
+	return res;
+}
+
+static int my_releasedir(const char* path, struct fuse_file_info *fi){
+	printf("%d %s %s %s\n",getpid(), diskname, "releasedir",path);
+	(void) path;
+	(void) fi;
+	return 0;
+}
+
+static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
+	printf("%d %s %s %s\n",getpid(), diskname, "create",path);
+	(void) fi;
+	char request [strlen("create")+strlen(path)+sizeof(mode_t)+3];
+	sprintf(request, "%s %s %d", "create", path,mode);
+	write(servers_sfd[0], request, strlen(request));
+
+	int res;
+	read(servers_sfd[0],&res,sizeof(int));
+	if (res == -1){
+		return -errno;
+	}
+	return 0;
+}
+
+static int my_opendir(const char* path, struct fuse_file_info* fi){
+	printf("%d %s %s %s\n",getpid(), diskname, "opendir",path);
+	char request [strlen("opendir")+strlen(path)+2];
+	sprintf(request, "%s %s", "opendir", path);
+	write(servers_sfd[0], request, strlen(request));
+
+	DIR* dp=NULL;
+	read(servers_sfd[0],dp,sizeof(DIR*));
+	if(dp!=NULL){
+		return 0;
+	}
+	return -errno;
+}
+
+static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
+	printf("%d %s %s %s\n",getpid(), diskname, "write",path);
+	return 0;
 }
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
@@ -131,52 +245,13 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 		if (offset + size > len)
 			size = len - offset;
 		memcpy(buf, hello_str + offset, size);
-	} else
+	} else{
 		size = 0;
+	}
 
 	return size;
 }
 
-static int my_rename(const char* from, const char* to){
-
-	return 0;
-}
-
-
-static int my_unlink(const char* path){
-
-	return 0;
-
-}
-static int my_release(const char* path, struct fuse_file_info *fi){
-
-	return 0;
-}
-
-static int my_rmdir(const char* path){
-	return 0;
-}
-
-static int my_mkdir(const char* path, mode_t mode){
-	return 0;
-}
-
-static int my_opendir(const char* path, struct fuse_file_info* fi){
-	return 0;
-}
-
-static int my_releasedir(const char* path, struct fuse_file_info *fi){
-	return 0;
-}
-
-static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-	return 0;
-}
-
-static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
-
-	return 0;
-}
 static struct fuse_operations all_methods = {
 	.getattr	= my_getattr,
 	.readdir	= my_readdir,
@@ -195,9 +270,6 @@ static struct fuse_operations all_methods = {
 //-----------------------------------------------------------------------------------------
 
 int main(int argc, char **argv){
-
-	
-
 	/*printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	return 0;*/
@@ -233,7 +305,7 @@ int main(int argc, char **argv){
 
 	if(argc<2){
 		printf("Wrong parameters.\nYou should only pass: Configuration File Direction\n");
-		exit(0);
+		return 0;
 	}
 
 	char* file_name = *(&argv[1]);

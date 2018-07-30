@@ -100,6 +100,69 @@ void client_handler(int cfd) {
             write (cfd, &fileStat, sizeof(stat));
             printf("here 4: ") ;
 
+        }else if(strcmp(current_command,"rename")==0){
+            const char s[2] =" ";
+            char *token;
+            token = strtok(buf, s);
+            int i=1;
+            char* from="";
+            char* to="";
+            while( token != NULL ) {
+                if(i==2){
+                    from = strdup(token);
+                }else if(i==3){
+                    to = strdup(token);
+                }
+                token = strtok(NULL, s);
+                i++;
+            }
+
+            char current_from_path [strlen(param_direction)+strlen(from)+1];
+            sprintf(current_from_path, "%s%s", param_direction, from);
+
+            char current_to_path [strlen(param_direction)+strlen(to)+1];
+            sprintf(current_to_path, "%s%s", param_direction, to);
+
+            int res= rename(current_from_path,current_to_path);
+            write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"unlink")==0){
+            char* path = get_command_param(buf);
+            
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+
+            int res = unlink(current_path);
+            write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"rmdir")==0){
+            char* path = get_command_param(buf);
+            
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+
+            int res = rmdir(current_path);
+            write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"mkdir")==0){
+            char* path = get_command_param(buf);
+
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+            int res = mkdir(current_path,0);
+            write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"create")==0){
+            char* path = get_command_param(buf);
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+            int mode = get_mode(buf);
+
+            int res = creat(current_path,mode);
+            write (cfd, &res, sizeof(int));
+        }else if(strcmp(current_command,"opendir")==0){
+            char* path = get_command_param(buf);
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+
+            DIR *dp = opendir(current_path);
+            write (cfd, dp, sizeof(DIR*));
         }
     }
     close(cfd);
