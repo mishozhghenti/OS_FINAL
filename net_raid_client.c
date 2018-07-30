@@ -231,13 +231,20 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("%d %s %s %s\n",getpid(), diskname, "write",path);
+	(void) fi;
+
+	if(raid==1){
+		printf("%s\n", "raind 1");
+	}else if(raid==5){
+		printf("%s\n", "raid 2");
+	}
 	return 0;
 }
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-	size_t len;
-	(void) fi;
 	printf("%d %s %s %s\n",getpid(), diskname, "read",path);
+	(void) fi;
+	size_t len;
 	if(strcmp(path, hello_path) != 0)
 		return -ENOENT;
 	len = strlen(hello_str);
