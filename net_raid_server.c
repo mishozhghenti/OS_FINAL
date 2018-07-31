@@ -94,12 +94,11 @@ void client_handler(int cfd) {
             file=open(current_path,O_RDONLY);
             printf("here 2: %d\n", file);
 
-            //fstat(file,&fileStat);
+            fstat(file,&fileStat);
             printf("here 3: ") ;
 
             write (cfd, &fileStat, sizeof(stat));
             printf("here 4: ") ;
-
         }else if(strcmp(current_command,"rename")==0){
             const char s[2] =" ";
             char *token;
@@ -160,9 +159,39 @@ void client_handler(int cfd) {
             char* path = get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-
+            printf("opendir %s\n", "here1");
             DIR *dp = opendir(current_path);
+            printf("opendir %s\n", "here2");
+
             write (cfd, dp, sizeof(DIR*));
+            printf("opendir %s\n", "here3");
+        }else if(strcmp(current_command,"write")==0){
+            printf("%s\n", "write");
+           // sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
+
+            int size = get_write_size(buf);
+            char* buf= get_write_buf(buf,size);
+            char* path= get_write_path(buf,size);
+            int offset= get_write_offset(buf,size);
+
+            char current_path [strlen(param_direction)+strlen(path)+1];
+            sprintf(current_path, "%s%s", param_direction, path);
+            int fd;
+            int res;
+            fd = open(current_path, O_WRONLY);
+            if (fd == -1){
+                write (cfd, &fd, sizeof(int));
+            }else{
+                res = pwrite(fd, buf, size, offset);
+                if (res == -1){
+                    write (cfd, &res, sizeof(int));
+                }
+                close(fd);
+                int ok=0;
+                write (cfd, &ok, sizeof(int));
+            }
+        }else if(strcmp(current_command,"read")==0){
+            printf("%s\n", "read");
         }
     }
     close(cfd);
@@ -200,13 +229,13 @@ int main(int argc, char **argv){
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     listen(sfd, BACKLOG);
-    printf("%s\n", "here 1");
+    printf("%s\n", "Starting Server Listening...");
     while (true){
-    	printf("%s\n", "here 2");
+    	printf("%s\n", "Server listening");
         int peer_addr_size = sizeof(struct sockaddr_in);
-        printf("%s\n", "here 3");
+        printf("%s\n", "Server ready");
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
-        printf("%s\n", "here 4");
+        printf("%s\n", "Server got new one");
         switch(fork()) {
             case -1:
                 return -1; // error

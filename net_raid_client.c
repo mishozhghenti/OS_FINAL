@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/ip.h> /* superset of previous */
+#include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -35,23 +35,28 @@ static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 
 static int my_getattr(const char *path, struct stat *stbuf){
-	int res = 0;
-	printf("%d %s %s %s\n",getpid(), diskname, "getattr",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "getattr",path);
 
 	memset(stbuf, 0, sizeof(struct stat));
 
 	char request [strlen("getattr")+strlen(path)+2];
 	sprintf(request, "%s %s", "getattr", path);
-	printf("current :::::::::::::::::::::::::::%s\n",servers[0].port );
-	write(servers_sfd[0], request, strlen(request));
 
-	struct stat fileStat;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code= write(servers_sfd[i], request, strlen(request));
 
-	read(servers_sfd[0],&fileStat,sizeof(stat));
+		if(request_status_code==0){
+			struct stat fileStat;
 
-	struct stat* cp=malloc(sizeof(stat));
-	memcpy(cp,&fileStat,sizeof(stat));
-	stbuf=cp;
+			read(servers_sfd[i],&fileStat,sizeof(stat));
+
+			struct stat* cp=malloc(sizeof(stat));
+			memcpy(cp,&fileStat,sizeof(stat));
+			stbuf=cp;
+			return 0;
+		}
+	}
+
 	/*
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
@@ -62,8 +67,7 @@ static int my_getattr(const char *path, struct stat *stbuf){
 		stbuf->st_size = strlen(hello_str);
 	} else
 		res = -ENOENT;*/
-
-	return res;
+	return -errno;
 }
 
 static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
@@ -72,48 +76,51 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 	/*if (strcmp(path, "/") != 0)
 		return -ENOENT;*/
-	printf("%d %s %s %s\n", getpid(),diskname, "readdir",path);
-
-/*
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-	filler(buf, hello_path + 1, NULL, 0);*/
-
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "readdir",path);
 
 	char request [strlen("readdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "readdir", path);
 
-	write(servers_sfd[0], request, strlen(request));
-	char response[1024];
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			char response[1024];
+			int data_size = read(servers_sfd[i],&response,1024);
+			response[data_size]='\0';
 
-	int data_size = read(servers_sfd[0],&response,1024);
-	response[data_size]='\0';
-	//printf(">>>>>>>>>>>>> Client recieved response: %s\n",response);
-
-	const char s[2] =" ";
-   	char *token;
-	token = strtok(response, s);
-	while( token != NULL ) {
-		printf( "Client readdir tokens: %s\n", token );
-		filler(buf,token,NULL,0);
-	    token = strtok(NULL, s);
+			const char s[2] =" ";
+		   	char *token;
+			token = strtok(response, s);
+			while( token != NULL ) {
+				printf( "Client readdir tokens: %s\n", token );
+				filler(buf,token,NULL,0);
+			    token = strtok(NULL, s);
+			}
+			return 0;
+		}
 	}
-	return 0;
+	return -errno;
 }
 
 static int my_open(const char *path, struct fuse_file_info *fi){
-	printf("%d %s %s %s\n", getpid(),diskname, "open",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
 
 	char request [strlen("open")+strlen(path)+2];
 	sprintf(request, "%s %s", "open", path);
 
-	write(servers_sfd[0], request, strlen(request));
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+			return res;
+		}
 	}
-	return res;
+	
+	return -errno;
 
 	/*if (strcmp(path, hello_path) != 0)
 		return -ENOENT;
@@ -126,97 +133,124 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 
 
 static int my_rename(const char* from, const char* to){
-	printf("%d %s %s %s %s\n",getpid(), diskname, "rename",from,to);
+	printf("Process ID:%d Diskname:%s Method:%s From:%s To:%s\n",getpid(), diskname, "rename",from,to);
 
 	char request [strlen("rename")+strlen(from)+strlen(to)+3];
 	sprintf(request, "%s %s %s", "rename", from, to);
 
-	write(servers_sfd[0], request, strlen(request));
-
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code= write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+		}else{
+			return -errno;
+		}
 	}
-	return res;
+	return 0;
 }
 
 static int my_unlink(const char* path){
-	printf("%d %s %s %s\n",getpid(), diskname, "unlink",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "unlink",path);
 
 	char request [strlen("unlink")+strlen(path)+2];
 	sprintf(request, "%s %s", "unlink", path);
-	
-	write(servers_sfd[0], request, strlen(request));
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code=write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+			return res;
+		}
 	}
-	return res;
+	return -errno;
 }
 
 static int my_release(const char* path, struct fuse_file_info *fi){
-	printf("%d %s %s %s\n",getpid(), diskname, "release",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname,"release",path);
 	(void) path;
 	(void) fi;
 	return 0;
 }
 
 static int my_rmdir(const char* path){
-	printf("%d %s %s %s\n",getpid(), diskname, "rmdir",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "rmdir",path);
 
 	char request [strlen("rmdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "rmdir", path);
-
-	write(servers_sfd[0], request, strlen(request));
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code=write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+		}else{
+			return -errno;
+		}
 	}
-	return res;
+	return 0;
 }
 
 static int my_mkdir(const char* path, mode_t mode){
-	printf("%d %s %s %s\n",getpid(), diskname, "mkdir",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "mkdir",path);
 
 	char request [strlen("mkdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "mkdir", path);
 
-	write(servers_sfd[0], request, strlen(request));
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code=write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+		}else{
+			return -errno;
+		}
+
 	}
-	return res;
+	return 0;
 }
 
 static int my_releasedir(const char* path, struct fuse_file_info *fi){
-	printf("%d %s %s %s\n",getpid(), diskname, "releasedir",path);
+	printf("Process ID:%d diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "releasedir",path);
 	(void) path;
 	(void) fi;
 	return 0;
 }
 
 static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
-	printf("%d %s %s %s\n",getpid(), diskname, "create",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "create",path);
 	(void) fi;
 	char request [strlen("create")+strlen(path)+sizeof(mode_t)+3];
 	sprintf(request, "%s %s %d", "create", path,mode);
-	write(servers_sfd[0], request, strlen(request));
 
-	int res;
-	read(servers_sfd[0],&res,sizeof(int));
-	if (res == -1){
-		return -errno;
-	}
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code=write(servers_sfd[i], request, strlen(request));
+		if(request_status_code==0){
+			int res;
+			read(servers_sfd[i],&res,sizeof(int));
+			if (res == -1){
+				return -errno;
+			}
+		}else{
+			return -errno;
+		}
+	}	
 	return 0;
 }
 
 static int my_opendir(const char* path, struct fuse_file_info* fi){
-	printf("%d %s %s %s\n",getpid(), diskname, "opendir",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "opendir",path);
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
 	write(servers_sfd[0], request, strlen(request));
@@ -230,25 +264,33 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 }
 
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-	printf("%d %s %s %s\n",getpid(), diskname, "write",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path,buf);
 	(void) fi;
 
 	if(raid==1){
+		char request [strlen("write")+sizeof(size_t)+strlen(buf)+strlen(path)+sizeof(int)+5];
+		sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
+
+		for (int i = 0; i < num_servers-1; ++i){
+		//	int request_status_code=write(servers_sfd[i], request, strlen(request));
+			// TODO
+		}
+
 		printf("write %s\n", "raind 1");
 	}else if(raid==5){
-		printf("write %s\n", "raid 2");
+		printf("write %s\n", "raid 5");
 	}
 	return 0;
 }
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
-	printf("%d %s %s %s\n",getpid(), diskname, "read",path);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "read",path,buf);
 	(void) fi;
 	size_t len;
 	if(raid==1){
 		printf("read %s\n", "raind 1");
 	}else if(raid==5){
-		printf("read %s\n", "raid 2");
+		printf("read %s\n", "raid 5");
 	}
 
 
@@ -438,9 +480,19 @@ int main(int argc, char **argv){
 				
 
 				char* new_argv[argc];
-				for (int i = 0; i < argc; i++){
+
+				/*for (int i = 0; i < argc; ++i)
+				{
 					new_argv[i]=strdup(argv[i]);
-				}
+				}*/
+ 				new_argv[0]=argv[0];
+ 				new_argv[1]=strdup(mount_point);// set to argv mountpoint directory
+ 				if(argc==3){
+ 					new_argv[2]=strdup(argv[2]);//
+ 				}
+ 				if(argc==4){
+ 					new_argv[3]=strdup(argv[3]);//
+ 				}
 
 				char msg [strlen(diskname)+strlen(mount_point)+20];
 				sprintf(msg, "%s mountpointing to: %s", diskname, mount_point);

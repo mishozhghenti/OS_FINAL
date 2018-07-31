@@ -138,4 +138,96 @@ int get_flags(char* s){
 	return res;
 }
 
+int get_write_size(char* s){
+	char* new_s= strdup(s);
+	int i=0;
+	for (i = 0; i < strlen(new_s); ++i)
+	{
+		if(new_s[i]==' '){
+			i++;
+			break;
+		}
+	}
+
+	for(;i<strlen(new_s);i++){
+		if(new_s[i]==' '){
+			new_s[i]='\0';
+			break;
+		}
+	}
+	int size = string_to_int(&new_s[i]);
+
+	return size;
+}
+
+char* get_write_buf(char* s,int size){
+	char* new_s = strdup(s);
+	int space_counter=0;
+	char* res;
+	for (int i = 0; i < strlen(new_s); i++){
+		if(space_counter==2){
+			res=strdup(&new_s[i]);
+			res[size]='\0';
+			break;
+		}
+		if(new_s[i]==' '){
+			space_counter++;
+		}
+	}
+	return res;
+}
+
+char* get_write_path(char* s, int size){
+	char* new_s = strdup(s);
+	int space_counter=0;
+	char* res;
+	for (int i = 0; i < strlen(new_s); i++){
+		if(space_counter==2){
+			res=strdup(&new_s[i]);
+			break;
+		}
+		if(new_s[i]==' '){
+			space_counter++;
+		}
+	}
+	res =&res[size];
+	for (int i = 0; i < strlen(res); ++i)
+	{
+		if(res[i]==' '){
+			res[i]='\0';
+			break;
+		}
+	}
+	return res;
+}
+
+
+int get_write_offset(char* s, int size){
+	int offset=0;
+	char* new_s = strdup(s);
+	int space_counter=0;
+	char* res;
+	for (int i = 0; i < strlen(new_s); i++){
+		if(space_counter==2){
+			res=strdup(&new_s[i]);
+			break;
+		}
+		if(new_s[i]==' '){
+			space_counter++;
+		}
+	}
+	res =&res[size];
+	for (int i = 0; i < strlen(res); ++i)
+	{
+		if(res[i]==' '){
+			res[i]='\0';
+			offset= string_to_int(&res[i+1]);
+			break;
+		}
+	}
+	return offset;
+}
+
+
+
 
