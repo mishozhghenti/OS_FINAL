@@ -266,10 +266,10 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path,buf);
 	(void) fi;
-
+	int raid_1_used_counter=0;
 	if(raid==1){
 		printf("write %s\n", "raind 1");
-		
+
 		char request [strlen("write")+sizeof(size_t)+strlen(buf)+strlen(path)+sizeof(int)+5];
 		sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
 
@@ -283,6 +283,10 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 					return -errno;
 				}
 			}else{
+				raid_1_used_counter++;
+				if(raid_1_used_counter==2){
+					return -errno;
+				}
 				// hotswap
 				int hotswap_request_status_code=write(servers_sfd[num_servers-1], request, strlen(request));
 
