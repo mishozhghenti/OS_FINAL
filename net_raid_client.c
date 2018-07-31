@@ -268,15 +268,34 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 	(void) fi;
 
 	if(raid==1){
+		printf("write %s\n", "raind 1");
+		
 		char request [strlen("write")+sizeof(size_t)+strlen(buf)+strlen(path)+sizeof(int)+5];
 		sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
 
 		for (int i = 0; i < num_servers-1; ++i){
-		//	int request_status_code=write(servers_sfd[i], request, strlen(request));
-			// TODO
-		}
+			int request_status_code=write(servers_sfd[i], request, strlen(request));
 
-		printf("write %s\n", "raind 1");
+			if (request_status_code==0){  // sent
+				int res;
+				read(servers_sfd[i],&res,sizeof(int));
+				if(res==-1){
+					return -errno;
+				}
+			}else{
+				// hotswap
+				int hotswap_request_status_code=write(servers_sfd[num_servers-1], request, strlen(request));
+
+				if (hotswap_request_status_code==0){  // sent
+					int res;
+					read(servers_sfd[num_servers-1],&res,sizeof(int));
+					if(res==-1){
+						return -errno;
+					}
+				}
+			}
+		}
+		return 0;
 	}else if(raid==5){
 		printf("write %s\n", "raid 5");
 	}
