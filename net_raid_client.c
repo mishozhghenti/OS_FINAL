@@ -302,6 +302,8 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 		return 0;
 	}else if(raid==5){
 		printf("write %s\n", "raid 5");
+
+
 	}
 	return 0;
 }
@@ -312,8 +314,10 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 	size_t len;
 	if(raid==1){
 		printf("read %s\n", "raind 1");
+
 	}else if(raid==5){
 		printf("read %s\n", "raid 5");
+		
 	}
 
 
@@ -521,7 +525,13 @@ int main(int argc, char **argv){
 				sprintf(msg, "%s mountpointing to: %s", diskname, mount_point);
 				log_message(msg);
 				
-				fuse_main(argc, new_argv, &all_methods, NULL);   // TODO return -1 if can not mountain
+				int fuse_code = fuse_main(argc, new_argv, &all_methods, NULL);   // TODO return -1 if can not mountain
+
+				if(fuse_code!=0){
+					char fuse_msg [strlen(diskname)+strlen(mount_point)+27];
+					sprintf(fuse_msg, "%s mountpointing failed to: %s", diskname, mount_point);
+					log_message(fuse_msg);
+				}
 				printf("%s end %d\n", "___________________",getpid());
 
 				break;	
