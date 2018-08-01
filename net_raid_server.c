@@ -44,7 +44,6 @@ void client_handler(int cfd) {
             sprintf(current_path, "%s%s", param_direction, current_params);
 
             printf("full current command: %s\n",current_path );
-            // TODO readdir impl.
 
             DIR *d;
             d = opendir(current_path);
@@ -210,9 +209,9 @@ int main(int argc, char **argv){
 	param_port = *(&argv[2]);
 	param_direction = *(&argv[3]);
 
-	printf("%s\n",param_ip);
-	printf("%s\n",param_port);
-	printf("%s\n",param_direction);
+	printf("\nIP: %s\n",param_ip);
+	printf("PORT: %s\n",param_port);
+	printf("Directory: %s\n",param_direction);
 
 	// starting server listening
  	
@@ -229,13 +228,13 @@ int main(int argc, char **argv){
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     listen(sfd, BACKLOG);
-    printf("%s\n", "Starting Server Listening...");
+    printf("\n%s\n\n", "Starting Server Listening...");
     while (true){
-    	printf("%s\n", "Server listening");
+    	printf("%s\n", "Server is listening");
         int peer_addr_size = sizeof(struct sockaddr_in);
-        printf("%s\n", "Server ready");
+        printf("%s\n", "Server is ready");
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
-        printf("%s\n", "Server got new one");
+        printf("%s\n", "Server got a new msg");
         switch(fork()) {
             case -1:
                 return -1; // error

@@ -104,6 +104,7 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 static int my_open(const char *path, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
+	(void) fi;
 
 	char request [strlen("open")+strlen(path)+2];
 	sprintf(request, "%s %s", "open", path);
@@ -251,6 +252,7 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
 static int my_opendir(const char* path, struct fuse_file_info* fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "opendir",path);
+	(void) fi;
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
 	write(servers_sfd[0], request, strlen(request));
@@ -291,11 +293,20 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 				int hotswap_request_status_code=write(servers_sfd[num_servers-1], request, strlen(request));
 
 				if (hotswap_request_status_code==0){  // sent
+					char hotswap_msg [strlen(diskname)+33];
+					sprintf(hotswap_msg, "%s hotswap server has been reached", diskname);
+					log_message(hotswap_msg);
+					
 					int res;
 					read(servers_sfd[num_servers-1],&res,sizeof(int));
 					if(res==-1){
 						return -errno;
 					}
+				}else {
+					// hotswap is not available
+					char hotswap_msg [strlen(diskname)+33];
+					sprintf(hotswap_msg, "%s hotswap server is not reachable", diskname);
+					log_message(hotswap_msg);
 				}
 			}
 		}
@@ -314,10 +325,10 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 	size_t len;
 	if(raid==1){
 		printf("read %s\n", "raind 1");
-
+		
 	}else if(raid==5){
 		printf("read %s\n", "raid 5");
-		
+
 	}
 
 
