@@ -253,6 +253,7 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 static int my_opendir(const char* path, struct fuse_file_info* fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "opendir",path);
 	(void) fi;
+	return 0;
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
 	write(servers_sfd[0], request, strlen(request));
@@ -516,7 +517,6 @@ int main(int argc, char **argv){
 				    }
 				}
 				
-
 				char* new_argv[argc];
 
 				/*for (int i = 0; i < argc; ++i)

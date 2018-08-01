@@ -228,13 +228,11 @@ int main(int argc, char **argv){
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     listen(sfd, BACKLOG);
-    printf("\n%s\n\n", "Starting Server Listening...");
+    printf("\nStarting Server (%s:%s) Listening...\n\n",param_ip,param_port);
     while (true){
-    	printf("%s\n", "Server is listening");
         int peer_addr_size = sizeof(struct sockaddr_in);
-        printf("%s\n", "Server is ready");
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
-        printf("%s\n", "Server got a new msg");
+        printf("Server got a new msg\n");
         switch(fork()) {
             case -1:
                 return -1; // error
