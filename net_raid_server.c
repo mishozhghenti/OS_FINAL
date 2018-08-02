@@ -23,9 +23,9 @@ void client_handler(int cfd) {
     int data_size;
     while (true) {
         data_size = read (cfd, &buf, 1024);
-        if (data_size <= 0){
-            break;
-        }
+        printf("Server got a new msg\n");
+
+        if (data_size <= 0){ break; }
         buf[data_size]='\0'; // endl symbol
 
         printf("Recieved sms size: %d\n",data_size);
@@ -33,7 +33,7 @@ void client_handler(int cfd) {
 
         char* current_command = get_command_name(buf);
         printf("current command: %s\n",current_command);
-       
+        
 
         if(strcmp(current_command,"readdir")==0){
             printf("%s\n", "Server Readdir command");
@@ -88,16 +88,14 @@ void client_handler(int cfd) {
 
             printf("current path%s\n", current_path);
 
-            struct stat fileStat;
-            int file=0;
-            file=open(current_path,O_RDONLY);
-            printf("here 2: %d\n", file);
-
-            fstat(file,&fileStat);
-            printf("here 3: ") ;
-
-            write (cfd, &fileStat, sizeof(stat));
-            printf("here 4: ") ;
+            struct stat* fileStat=NULL;
+           
+            int method_code = lstat(current_path,fileStat);
+            printf("Method code::::::::: %d\n", method_code);
+            printf("here 3: \n") ;
+            
+            write (cfd, fileStat, sizeof(struct stat*));
+            printf("here 4: \n") ;
         }else if(strcmp(current_command,"rename")==0){
             const char s[2] =" ";
             char *token;
@@ -208,8 +206,9 @@ int main(int argc, char **argv){
 	param_ip = *(&argv[1]);
 	param_port = *(&argv[2]);
 	param_direction = *(&argv[3]);
-
-	printf("\nIP: %s\n",param_ip);
+    printf("\n%s\n","Server Details");
+    printf("%s\n","--------------" );
+	printf("IP: %s\n",param_ip);
 	printf("PORT: %s\n",param_port);
 	printf("Directory: %s\n",param_direction);
 
@@ -232,7 +231,6 @@ int main(int argc, char **argv){
     while (true){
         int peer_addr_size = sizeof(struct sockaddr_in);
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
-        printf("Server got a new msg\n");
         switch(fork()) {
             case -1:
                 return -1; // error

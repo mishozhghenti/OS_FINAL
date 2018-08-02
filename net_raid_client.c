@@ -33,16 +33,37 @@ struct Client client;
 //-----------------------------------FUSE---------------------------------------------
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
+// TODO 
+
+// write() return (-1) if connection is not 
+
 
 static int my_getattr(const char *path, struct stat *stbuf){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "getattr",path);
-
 	memset(stbuf, 0, sizeof(struct stat));
 
 	char request [strlen("getattr")+strlen(path)+2];
 	sprintf(request, "%s %s", "getattr", path);
+	printf(">>> my request: %s\n", request);
+	int request_status_code= write(servers_sfd[0], request, strlen(request));
 
-	for (int i = 0; i < num_servers-1; i++){
+	if(request_status_code!=-1){
+		struct stat* fileStat=NULL;
+
+		read(servers_sfd[0],fileStat,sizeof(struct stat*));
+		printf("%s\n", "Client getatr server response recieved");
+
+		/*struct stat* cp=malloc(sizeof(struct stat));
+		memcpy(cp,&fileStat,sizeof(struct stat));*/
+		stbuf=fileStat;
+		return 0;
+	}else{
+		printf("getattr could not sent data to server \n");
+	}
+	return 0;
+
+
+	/*for (int i = 0; i < num_servers-1; i++){
 		int request_status_code= write(servers_sfd[i], request, strlen(request));
 
 		if(request_status_code==0){
@@ -55,9 +76,14 @@ static int my_getattr(const char *path, struct stat *stbuf){
 			stbuf=cp;
 			return 0;
 		}
-	}
+	}*/
 
-	/*
+
+//	return -errno;
+
+/*	int res = 0;
+
+	memset(stbuf, 0, sizeof(struct stat));
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
@@ -66,21 +92,39 @@ static int my_getattr(const char *path, struct stat *stbuf){
 		stbuf->st_nlink = 1;
 		stbuf->st_size = strlen(hello_str);
 	} else
-		res = -ENOENT;*/
-	return -errno;
+		res = -ENOENT;
+
+	return res;*/
 }
 
 static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
+		printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "readdir",path);
+
 	(void) offset;
 	(void) fi;
-
-	/*if (strcmp(path, "/") != 0)
-		return -ENOENT;*/
-	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "readdir",path);
 
 	char request [strlen("readdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "readdir", path);
 
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	if(request_status_code!=-1){
+		char response[1024];
+		int data_size = read(servers_sfd[0],&response,1024);
+		response[data_size]='\0';
+		const char s[2] =" ";
+	   	char *token;
+		token = strtok(response, s);
+		while( token != NULL ) {
+			printf( "Client readdir tokens: %s\n", token );
+			filler(buf,token,NULL,0);
+			token = strtok(NULL, s);
+		}
+	}else{
+		printf("%s\n", "readdir cant send data to server");
+	}
+
+	return 0;
+/*
 	for (int i = 0; i < num_servers-1; i++){
 		int request_status_code =write(servers_sfd[i], request, strlen(request));
 		if(request_status_code==0){
@@ -99,13 +143,25 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 			return 0;
 		}
 	}
-	return -errno;
+	return -errno;*/
+	/*(void) offset;
+	(void) fi;
+
+	if (strcmp(path, "/") != 0){
+		return -ENOENT;
+	}
+
+	filler(buf, ".", NULL, 0);
+	filler(buf, "..", NULL, 0);
+	filler(buf, hello_path + 1, NULL, 0);
+
+	return 0;*/
 }
 
 static int my_open(const char *path, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
-	(void) fi;
-
+	/*(void) fi;
+	return 0;
 	char request [strlen("open")+strlen(path)+2];
 	sprintf(request, "%s %s", "open", path);
 
@@ -121,21 +177,22 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 		}
 	}
 	
-	return -errno;
-
-	/*if (strcmp(path, hello_path) != 0)
+	return -errno;*/
+	if (strcmp(path, hello_path) != 0){
 		return -ENOENT;
+	}
 
 	if ((fi->flags & 3) != O_RDONLY)
 		return -EACCES;
 
-	return 0;*/
+	return 0;
+
 }
 
 
 static int my_rename(const char* from, const char* to){
 	printf("Process ID:%d Diskname:%s Method:%s From:%s To:%s\n",getpid(), diskname, "rename",from,to);
-
+	return 0;
 	char request [strlen("rename")+strlen(from)+strlen(to)+3];
 	sprintf(request, "%s %s %s", "rename", from, to);
 
@@ -156,7 +213,7 @@ static int my_rename(const char* from, const char* to){
 
 static int my_unlink(const char* path){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "unlink",path);
-
+	return 0;
 	char request [strlen("unlink")+strlen(path)+2];
 	sprintf(request, "%s %s", "unlink", path);
 	for (int i = 0; i < num_servers-1; i++){
@@ -182,7 +239,7 @@ static int my_release(const char* path, struct fuse_file_info *fi){
 
 static int my_rmdir(const char* path){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "rmdir",path);
-
+	return 0;
 	char request [strlen("rmdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "rmdir", path);
 	for (int i = 0; i < num_servers-1; i++){
@@ -202,7 +259,7 @@ static int my_rmdir(const char* path){
 
 static int my_mkdir(const char* path, mode_t mode){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "mkdir",path);
-
+	return 0;
 	char request [strlen("mkdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "mkdir", path);
 
@@ -232,6 +289,7 @@ static int my_releasedir(const char* path, struct fuse_file_info *fi){
 static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "create",path);
 	(void) fi;
+	return 0;
 	char request [strlen("create")+strlen(path)+sizeof(mode_t)+3];
 	sprintf(request, "%s %s %d", "create", path,mode);
 
@@ -253,7 +311,7 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 static int my_opendir(const char* path, struct fuse_file_info* fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "opendir",path);
 	(void) fi;
-
+	return 0;
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
 	write(servers_sfd[0], request, strlen(request));
@@ -269,6 +327,7 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path,buf);
 	(void) fi;
+	return 0;
 	int raid_1_used_counter=0;
 	if(raid==1){
 		printf("write %s\n", "raind 1");
@@ -323,6 +382,7 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "read",path,buf);
 	(void) fi;
+	/*return 0;
 	size_t len;
 	if(raid==1){
 		printf("read %s\n", "raind 1");
@@ -344,6 +404,21 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 		size = 0;
 	}
 
+	return size;*/
+	size_t len;
+
+	if(strcmp(path, hello_path) != 0){
+		return -ENOENT;
+	}
+
+	len = strlen(hello_str);
+	if (offset < len) {
+		if (offset + size > len)
+			size = len - offset;
+		memcpy(buf, hello_str + offset, size);
+	} else
+		size = 0;
+
 	return size;
 }
 
@@ -352,7 +427,7 @@ static struct fuse_operations all_methods = {
 	.readdir	= my_readdir,
 	.open		= my_open,
 	.read		= my_read,
-	.rename     = my_rename,
+	/*.rename     = my_rename,
 	.unlink     = my_unlink,
 	.release    = my_release,
 	.rmdir      = my_rmdir,
@@ -360,7 +435,7 @@ static struct fuse_operations all_methods = {
 	.opendir    = my_opendir,
 	.releasedir = my_releasedir,
 	.create     = my_create,
-	.write      = my_write,
+	.write      = my_write,*/
 };
 //-----------------------------------------------------------------------------------------
 
@@ -561,7 +636,7 @@ int main(int argc, char **argv){
 
 	//fclose(fp);
 
-	printf("%s %d\n", "\n--------finished PARSING-----------",getpid());
+	printf("%s pID:%d\n", "\n--------FINISHED-----------",getpid());
 	/*printf("%s\n", client.error_log);
 	printf("%d\n", client.cache_size);
 	printf("%s\n", client.cache_replacment);
