@@ -34,44 +34,50 @@ void client_handler(int cfd) {
         char* current_command = get_command_name(buf);
         printf("current command: %s\n",current_command);
         
-
         if(strcmp(current_command,"readdir")==0){
-            printf("%s\n", "Server Readdir command");
+            printf("%s\n", "Server [readdir] command");
              char* current_params =get_command_param(buf);
             //printf("current param: %s\n",current_params);
 
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
 
-            printf("full current command: %s\n",current_path );
+            printf("full current command: %s\n",current_path);
 
             DIR *d;
             d = opendir(current_path);
-            char res[1024];
-            int res_size=0;
+            int response_code;
 
-            while(true){
-                struct dirent * entry;
-                const char * d_name;
-                entry =readdir(d);
-                if(! entry){ break; }
+            if(d==NULL){ // error
+                response_code=-1;
+                write (cfd, &response_code, sizeof(response_code));
+            }else{ // OK
+                response_code=0;
+                write (cfd, &response_code, sizeof(response_code));
 
-                d_name =entry->d_name;
-                strcpy(res+res_size,d_name);
-                res_size+=strlen(d_name);
-                res[res_size]=' ';
-                res_size+=1;
-               // printf("llllll>>>>>>>>>>> %s\n", d_name);
+                char res[1024];
+                int res_size=0;
+
+                while(true){
+                    struct dirent * entry;
+                    const char * d_name;
+                    entry =readdir(d);
+                    if(! entry){ break; }
+
+                    d_name =entry->d_name;
+                    strcpy(res+res_size,d_name);
+                    res_size+=strlen(d_name);
+                    res[res_size]=' ';
+                    res_size+=1;
+                   // printf("llllll>>>>>>>>>>> %s\n", d_name);
+                }
+                res_size-=1;
+                res[res_size]='\0';
+
+                write (cfd, &res, res_size);
             }
-            res_size-=1;
-            res[res_size]='\0';
-            //printf("finaaaaaaaaaal whole stirng: %s\n",res);
-            //printf("finaaaaaaaaaal |%s| %d\n",res,res_size);
-
-           // printf("Server sent response: %s\n", res);
-            write (cfd, &res, res_size);
         }else if(strcmp(current_command,"open")==0){
-            printf("%s\n", "Server OPEN command");
+            printf("%s\n", "Server [open] command");
             char* current_params =get_command_param(buf);
             //printf("current param: %s\n",current_params);
             char current [strlen(param_direction)+strlen(current_params)+1];
@@ -79,23 +85,26 @@ void client_handler(int cfd) {
             int res = open(current,0);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"getattr")==0){
-            printf("%s\n", "Server got getattr<<<<<<<<<<<<<<");
+            printf("%s\n", "Server [getattr] command");
 
             char* current_params =get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
-            printf("%s\n", "here 1");
 
             printf("current path%s\n", current_path);
 
-            struct stat* fileStat=NULL;
+            struct stat fileStat;
            
-            int method_code = lstat(current_path,fileStat);
-            printf("Method code::::::::: %d\n", method_code);
-            printf("here 3: \n") ;
-            
-            write (cfd, fileStat, sizeof(struct stat*));
-            printf("here 4: \n") ;
+            int method_code = lstat(current_path,&fileStat);
+
+            printf("Server [getattr] response method_code: %d\n",method_code);
+
+            write(cfd,&method_code,sizeof(method_code));
+
+            if(method_code!=-1){ 
+                printf("Server [getattr] response OK\n");
+                write (cfd, &fileStat, sizeof(fileStat));
+            }
         }else if(strcmp(current_command,"rename")==0){
             const char s[2] =" ";
             char *token;
@@ -193,8 +202,6 @@ void client_handler(int cfd) {
     }
     close(cfd);
 }
-
-
 
 
 int main(int argc, char **argv){
