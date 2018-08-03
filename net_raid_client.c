@@ -134,6 +134,7 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 static int my_open(const char *path, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
+
 /*	(void) fi;
 
 	char request [strlen("open")+strlen(path)+2];
@@ -177,7 +178,6 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 		return -EACCES;
 
 	return 0;
-
 }
 
 
@@ -373,6 +373,7 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "read",path,buf);
 	(void) fi;
+
 	/*return 0;
 	size_t len;
 	if(raid==1){
