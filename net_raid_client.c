@@ -31,8 +31,6 @@ struct Server servers[10];
 struct Client client;
 
 //-----------------------------------FUSE---------------------------------------------
-// TODO
-// write() return (-1) if connection is not 
 
 static int my_getattr(const char *path, struct stat *stbuf){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "getattr",path);
@@ -224,21 +222,25 @@ static int my_rename(const char* from, const char* to){
 
 static int my_unlink(const char* path){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "unlink",path);
-	return 0;
+
 	char request [strlen("unlink")+strlen(path)+2];
 	sprintf(request, "%s %s", "unlink", path);
-	for (int i = 0; i < num_servers-1; i++){
-		int request_status_code=write(servers_sfd[i], request, strlen(request));
-		if(request_status_code==0){
-			int res;
-			read(servers_sfd[i],&res,sizeof(int));
-			if (res == -1){
-				return -errno;
-			}
-			return res;
+
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if(request_status_code!=-1){
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
+		printf("unlink response : %d\n", response_code );
+		if(response_code==-1){
+			return -ENOENT;
+		}else{
+			return response_code;
 		}
+	}else{
+		printf("%s\n", "unlink cant send data to server");
 	}
-	return -errno;
+	return -ENOENT;
 }
 
 static int my_release(const char* path, struct fuse_file_info *fi){
@@ -501,8 +503,8 @@ static struct fuse_operations all_methods = {
 	.releasedir = my_releasedir,
 	.rmdir      = my_rmdir,
 	.mkdir      = my_mkdir,
-	/*.unlink     = my_unlink,
-	.opendir    = my_opendir,
+	.unlink     = my_unlink,
+	/*.opendir    = my_opendir,
 	.create     = my_create,*/
 };
 //-----------------------------------------------------------------------------------------
