@@ -150,22 +150,6 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	}
 	return -ENOENT;
 
-
-/*	for (int i = 0; i < num_servers-1; i++){
-		int request_status_code =write(servers_sfd[i], request, strlen(request));
-		if(request_status_code==0){
-			int res;
-			read(servers_sfd[i],&res,sizeof(int));
-			if (res == -1){
-				return -errno;
-			}
-			return res;
-		}
-	}
-	
-	return -errno;*/
-
-
 /*	if (strcmp(path, hello_path) != 0){
 		return -ENOENT;
 	}
@@ -200,24 +184,6 @@ static int my_rename(const char* from, const char* to){
 		printf("%s\n", "rename cant send data to server");
 	}
 	return -ENOENT;
-
-
-/*	char request [strlen("rename")+strlen(from)+strlen(to)+3];
-	sprintf(request, "%s %s %s", "rename", from, to);
-
-	for (int i = 0; i < num_servers-1; i++){
-		int request_status_code= write(servers_sfd[i], request, strlen(request));
-		if(request_status_code==0){
-			int res;
-			read(servers_sfd[i],&res,sizeof(int));
-			if (res == -1){
-				return -errno;
-			}
-		}else{
-			return -errno;
-		}
-	}
-	return 0;*/
 }
 
 static int my_unlink(const char* path){

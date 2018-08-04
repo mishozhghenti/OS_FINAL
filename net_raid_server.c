@@ -91,18 +91,14 @@ void client_handler(int cfd) {
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
 
-            //printf("current path%s\n", current_path);
-
             struct stat fileStat;
            
             int method_code = lstat(current_path,&fileStat);
 
-            //printf("Server [getattr] response method_code: %d\n",method_code);
 
             write(cfd,&method_code,sizeof(method_code));
 
             if(method_code!=-1){ 
-                //printf("Server [getattr] response OK\n");
                 write (cfd, &fileStat, sizeof(fileStat));
             }
         }else if(strcmp(current_command,"rename")==0){
@@ -119,11 +115,10 @@ void client_handler(int cfd) {
             char current_to_path [strlen(param_direction)+strlen(to_data)+1];
             sprintf(current_to_path, "%s%s", param_direction, to_data);
 
-            //printf("From:|%s|  To:|%s|\n",current_from_path,current_to_path );
-
             int res= rename(current_from_path,current_to_path);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"unlink")==0){
+            printf("%s\n", "Server [unlink] command");
             char* path = get_command_param(buf);
             
             char current_path [strlen(param_direction)+strlen(path)+1];
@@ -136,7 +131,6 @@ void client_handler(int cfd) {
             
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-            printf("rmdir: |%s|\n",current_path);
 
             int res = rmdir(current_path);
             write (cfd, &res, sizeof(int));
@@ -172,8 +166,6 @@ void client_handler(int cfd) {
             printf("opendir %s\n", "here3");
         }else if(strcmp(current_command,"write")==0){
             printf("%s\n", "Server [write] command");
-           // sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
-
 
             char* current_params =get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(current_params)+1];
@@ -196,27 +188,6 @@ void client_handler(int cfd) {
                 int res = pwrite(fd, (const void*)write_data, size, offset);
                 write(cfd,&res,sizeof(int));
             }
- /*           int size = get_write_size(buf);
-            char* buf= get_write_buf(buf,size);
-            char* path= get_write_path(buf,size);
-            int offset= get_write_offset(buf,size);
-
-            char current_path [strlen(param_direction)+strlen(path)+1];
-            sprintf(current_path, "%s%s", param_direction, path);
-            int fd;
-            int res;
-            fd = open(current_path, O_WRONLY);
-            if (fd == -1){
-                write (cfd, &fd, sizeof(int));
-            }else{
-                res = pwrite(fd, buf, size, offset);
-                if (res == -1){
-                    write (cfd, &res, sizeof(int));
-                }
-                close(fd);
-                int ok=0;
-                write (cfd, &ok, sizeof(int));
-            }*/
         }else if(strcmp(current_command,"read")==0){
             printf("%s\n", "Server [read] command");
 
