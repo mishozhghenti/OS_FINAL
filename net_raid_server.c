@@ -172,10 +172,32 @@ void client_handler(int cfd) {
             write (cfd, dp, sizeof(DIR*));
             printf("opendir %s\n", "here3");
         }else if(strcmp(current_command,"write")==0){
-            printf("%s\n", "write");
+            printf("%s\n", "Server [write] command");
            // sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
 
-            int size = get_write_size(buf);
+
+            char* current_params =get_command_param(buf);
+            char current_path [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current_path, "%s%s", param_direction, current_params);
+            printf("Write fuuuuuuuuuuuul: %s\n",current_path );
+            int fd = open(current_path, O_WRONLY);
+            write (cfd, &fd, sizeof(int));  
+
+            if(fd!=-1){
+                char write_data[1024];
+                read(cfd,&write_data,1024);
+                printf("Server Write Data: |%s|\n",write_data);
+
+                size_t size;
+                off_t offset;
+
+                read(cfd,&size,sizeof(size));
+                read(cfd,&offset,sizeof(offset));
+
+                int res = pwrite(fd, (const void*)write_data, size, offset);
+                write(cfd,&res,sizeof(int));
+            }
+ /*           int size = get_write_size(buf);
             char* buf= get_write_buf(buf,size);
             char* path= get_write_path(buf,size);
             int offset= get_write_offset(buf,size);
@@ -195,7 +217,7 @@ void client_handler(int cfd) {
                 close(fd);
                 int ok=0;
                 write (cfd, &ok, sizeof(int));
-            }
+            }*/
         }else if(strcmp(current_command,"read")==0){
             printf("%s\n", "Server [read] command");
 
@@ -214,9 +236,7 @@ void client_handler(int cfd) {
                 read(cfd,&offset,sizeof(offset));
                 char read_buf[1024];
                 int res = pread(fd, read_buf, size, offset);
-                
-                printf(">>>>> pread code %d\n",res );
-                printf(">>>>>>>>>>>>>>>>> |%s|\n",read_buf );
+
                 write(cfd,&res,sizeof(int));
                 if(res!=-1){
                     write(cfd,read_buf,sizeof(read_buf));

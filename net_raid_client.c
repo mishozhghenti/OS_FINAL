@@ -31,9 +31,6 @@ struct Server servers[10];
 struct Client client;
 
 //-----------------------------------FUSE---------------------------------------------
-static const char *hello_str = "Hello World!\n";
-static const char *hello_path = "/hello";
-
 // TODO
 // write() return (-1) if connection is not 
 
@@ -320,8 +317,39 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path,buf);
 	(void) fi;
-	return 0;
-	int raid_1_used_counter=0;
+
+	char request [strlen("write")+strlen(path)+2];
+	sprintf(request, "%s %s", "write", path);
+
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if (request_status_code!=-1){
+		int open_code;
+		read(servers_sfd[0],&open_code,sizeof(open_code));
+
+		if(open_code!=-1){ // OPEN File OK
+			write(servers_sfd[0], buf, strlen(buf)); // buf
+			write(servers_sfd[0], &size, sizeof(size_t)); // size
+			write(servers_sfd[0], &offset, sizeof(off_t)); // offset
+			int write_code;
+			read(servers_sfd[0],&write_code,sizeof(write_code));
+			printf("%d\n", write_code);
+			if(write_code==-1){
+				return  -ENOENT;
+			}else{
+				return write_code;
+			}
+		}else{
+			return -ENOENT;
+		}
+	}else{
+		printf("%s\n", "read cant send data to server");
+	}
+
+	return -ENOENT;
+
+
+/*	int raid_1_used_counter=0;
 	if(raid==1){
 		printf("write %s\n", "raind 1");
 
@@ -367,7 +395,7 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 	}else if(raid==5){
 		printf("write %s\n", "raid 5");
 	}
-	return 0;
+	return 0;*/
 }
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
@@ -442,6 +470,7 @@ static struct fuse_operations all_methods = {
 	.readdir	= my_readdir,
 	.open		= my_open,
 	.read		= my_read,
+	.write      = my_write,
 	/*.rename     = my_rename,
 	.unlink     = my_unlink,
 	.release    = my_release,
@@ -449,8 +478,7 @@ static struct fuse_operations all_methods = {
 	.mkdir      = my_mkdir,
 	.opendir    = my_opendir,
 	.releasedir = my_releasedir,
-	.create     = my_create,
-	.write      = my_write,*/
+	.create     = my_create,*/
 };
 //-----------------------------------------------------------------------------------------
 
