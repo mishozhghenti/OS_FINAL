@@ -182,7 +182,6 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 static int my_rename(const char* from, const char* to){
 	printf("Process ID:%d Diskname:%s Method:%s From:%s To:%s\n",getpid(), diskname, "rename",from,to);
 
-
 	char request [strlen("rename")+strlen(from)+2];
 	sprintf(request, "%s %s", "rename", from);
 
@@ -251,22 +250,24 @@ static int my_release(const char* path, struct fuse_file_info *fi){
 
 static int my_rmdir(const char* path){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "rmdir",path);
-	return 0;
+	
 	char request [strlen("rmdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "rmdir", path);
-	for (int i = 0; i < num_servers-1; i++){
-		int request_status_code=write(servers_sfd[i], request, strlen(request));
-		if(request_status_code==0){
-			int res;
-			read(servers_sfd[i],&res,sizeof(int));
-			if (res == -1){
-				return -errno;
-			}
+
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if(request_status_code!=-1){
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
+		if(response_code==-1){
+			return response_code;
 		}else{
-			return -errno;
+			return 0;
 		}
+	}else{
+		printf("%s\n", "rmdir cant send data to server");
 	}
-	return 0;
+	return -ENOENT;
 }
 
 static int my_mkdir(const char* path, mode_t mode){
@@ -494,12 +495,12 @@ static struct fuse_operations all_methods = {
 	.read		= my_read,
 	.write      = my_write,
 	.rename     = my_rename,
-	/*.unlink     = my_unlink,
 	.release    = my_release,
+	.releasedir = my_releasedir,
 	.rmdir      = my_rmdir,
+	/*.unlink     = my_unlink,
 	.mkdir      = my_mkdir,
 	.opendir    = my_opendir,
-	.releasedir = my_releasedir,
 	.create     = my_create,*/
 };
 //-----------------------------------------------------------------------------------------

@@ -136,7 +136,8 @@ void client_handler(int cfd) {
             
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-
+            printf("rmdir: |%s|\n",current_path);
+            
             int res = rmdir(current_path);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"mkdir")==0){
