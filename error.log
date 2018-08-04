@@ -1,0 +1,4 @@
+[Sun Aug  5 01:01:16 2018] STORAGE1 127.0.0.1:10001 open connection
+[Sun Aug  5 01:01:16 2018] STORAGE1 127.0.0.1:10002 connection failed
+[Sun Aug  5 01:01:16 2018] STORAGE1 127.0.0.1:11111 hotswap server connection failed
+[Sun Aug  5 01:01:16 2018] STORAGE1 mountpointing to: /home/misho/Desktop/a1

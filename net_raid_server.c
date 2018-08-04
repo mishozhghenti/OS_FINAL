@@ -42,7 +42,7 @@ void client_handler(int cfd) {
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
 
-            printf("full current command: %s\n",current_path);
+            //printf("full current command: %s\n",current_path);
 
             DIR *d;
             d = opendir(current_path);
@@ -91,18 +91,18 @@ void client_handler(int cfd) {
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
 
-            printf("current path%s\n", current_path);
+            //printf("current path%s\n", current_path);
 
             struct stat fileStat;
            
             int method_code = lstat(current_path,&fileStat);
 
-            printf("Server [getattr] response method_code: %d\n",method_code);
+            //printf("Server [getattr] response method_code: %d\n",method_code);
 
             write(cfd,&method_code,sizeof(method_code));
 
             if(method_code!=-1){ 
-                printf("Server [getattr] response OK\n");
+                //printf("Server [getattr] response OK\n");
                 write (cfd, &fileStat, sizeof(fileStat));
             }
         }else if(strcmp(current_command,"rename")==0){
@@ -197,7 +197,31 @@ void client_handler(int cfd) {
                 write (cfd, &ok, sizeof(int));
             }
         }else if(strcmp(current_command,"read")==0){
-            printf("%s\n", "read");
+            printf("%s\n", "Server [read] command");
+
+            char* current_params =get_command_param(buf);
+            char current_path [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current_path, "%s%s", param_direction, current_params);
+
+            int fd = open(current_path, O_RDONLY);
+            write (cfd, &fd, sizeof(int));  
+
+            if(fd!=-1){
+                size_t size;
+                off_t offset;
+
+                read(cfd,&size,sizeof(size));
+                read(cfd,&offset,sizeof(offset));
+                char read_buf[1024];
+                int res = pread(fd, read_buf, size, offset);
+                
+                printf(">>>>> pread code %d\n",res );
+                printf(">>>>>>>>>>>>>>>>> |%s|\n",read_buf );
+                write(cfd,&res,sizeof(int));
+                if(res!=-1){
+                    write(cfd,read_buf,sizeof(read_buf));
+                }
+            }
         }
     }
     close(cfd);

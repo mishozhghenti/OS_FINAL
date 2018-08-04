@@ -229,5 +229,23 @@ int get_write_offset(char* s, int size){
 }
 
 
+char* get_read_buff(char* s){
+	char* new_s= strdup(s);
+	int spaces=0;
+	char* res;
+	for (int i = 0; i < strlen(new_s); i++)
+	{
+		if(new_s[i]==' '){
+			spaces++;
+		}
+		if(spaces==2){
+			res=strdup(&s[i+1]);
+			break;
+		}
+	}
+	return res;
+}
+
+
 
 

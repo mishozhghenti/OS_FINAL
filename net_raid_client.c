@@ -55,7 +55,7 @@ static int my_getattr(const char *path, struct stat *stbuf){
 			return -ENOENT;
 		}else{ // OK
 			read(servers_sfd[0],stbuf,sizeof(struct stat));
-			printf("%s\n", "Client getattr OK response");
+			//printf("%s\n", "Client getattr OK response");
 			return 0;
 		}
 	}else{
@@ -172,14 +172,14 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	return -errno;*/
 
 
-	if (strcmp(path, hello_path) != 0){
+/*	if (strcmp(path, hello_path) != 0){
 		return -ENOENT;
 	}
 
 	if ((fi->flags & 3) != O_RDONLY)
 		return -EACCES;
 
-	return 0;
+	return 0;*/
 }
 
 
@@ -366,8 +366,6 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 		return 0;
 	}else if(raid==5){
 		printf("write %s\n", "raid 5");
-
-
 	}
 	return 0;
 }
@@ -375,6 +373,40 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "read",path,buf);
 	(void) fi;
+
+	char request [strlen("read")+strlen(path)+2];
+	sprintf(request, "%s %s", "read", path);
+
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if (request_status_code!=-1){
+			int open_code;
+			read(servers_sfd[0],&open_code,sizeof(open_code));
+
+			if(open_code!=-1){ // OPEN OK
+
+				write(servers_sfd[0], &size, sizeof(size_t)); // size
+				write(servers_sfd[0], &offset, sizeof(off_t)); // offset
+
+				int read_code;
+				read(servers_sfd[0],&read_code,sizeof(read_code));
+
+				if(read_code==-1){
+					return  -ENOENT;
+				}else{
+					char result[1024];
+					int data_size = read (servers_sfd[0], &result, 1024);
+					result[data_size]='\0';
+					memcpy(buf,result,strlen(result));
+					return strlen(result);
+				}
+			}else{
+				return -ENOENT;
+			}
+	}else{
+		printf("%s\n", "read cant send data to server");
+	}
+	return -ENOENT;
 
 	/*return 0;
 	size_t len;
@@ -385,21 +417,9 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 		printf("read %s\n", "raid 5");
 
 	}
-
-
-	if(strcmp(path, hello_path) != 0)
-		return -ENOENT;
-	len = strlen(hello_str);
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-		memcpy(buf, hello_str + offset, size);
-	} else{
-		size = 0;
-	}
-
 	return size;*/
-	size_t len;
+
+/*	size_t len;
 
 	if(strcmp(path, hello_path) != 0){
 		return -ENOENT;
@@ -407,13 +427,14 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 
 	len = strlen(hello_str);
 	if (offset < len) {
-		if (offset + size > len)
+		if (offset + size > len){
 			size = len - offset;
+		}
 		memcpy(buf, hello_str + offset, size);
 	} else
 		size = 0;
 
-	return size;
+	return size;*/
 }
 
 static struct fuse_operations all_methods = {
