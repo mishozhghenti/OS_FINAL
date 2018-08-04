@@ -106,27 +106,20 @@ void client_handler(int cfd) {
                 write (cfd, &fileStat, sizeof(fileStat));
             }
         }else if(strcmp(current_command,"rename")==0){
-            const char s[2] =" ";
-            char *token;
-            token = strtok(buf, s);
-            int i=1;
-            char* from="";
-            char* to="";
-            while( token != NULL ) {
-                if(i==2){
-                    from = strdup(token);
-                }else if(i==3){
-                    to = strdup(token);
-                }
-                token = strtok(NULL, s);
-                i++;
-            }
+            printf("%s\n", "Server [rename] command");
+            char* current_params =get_command_param(buf);
 
-            char current_from_path [strlen(param_direction)+strlen(from)+1];
-            sprintf(current_from_path, "%s%s", param_direction, from);
+            char current_from_path [strlen(param_direction)+strlen(current_params)+1];
+            sprintf(current_from_path, "%s%s", param_direction, current_params);
 
-            char current_to_path [strlen(param_direction)+strlen(to)+1];
-            sprintf(current_to_path, "%s%s", param_direction, to);
+            char to_data[1024];
+            int to_size=read(cfd,&to_data,1024);
+            to_data[to_size]='\0';
+
+            char current_to_path [strlen(param_direction)+strlen(to_data)+1];
+            sprintf(current_to_path, "%s%s", param_direction, to_data);
+
+            //printf("From:|%s|  To:|%s|\n",current_from_path,current_to_path );
 
             int res= rename(current_from_path,current_to_path);
             write (cfd, &res, sizeof(int));
@@ -179,7 +172,7 @@ void client_handler(int cfd) {
             char* current_params =get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(current_params)+1];
             sprintf(current_path, "%s%s", param_direction, current_params);
-            printf("Write fuuuuuuuuuuuul: %s\n",current_path );
+
             int fd = open(current_path, O_WRONLY);
             write (cfd, &fd, sizeof(int));  
 

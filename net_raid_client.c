@@ -131,7 +131,6 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 static int my_open(const char *path, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
-
 	(void) fi;
 
 	char request [strlen("open")+strlen(path)+2];
@@ -182,8 +181,31 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 
 static int my_rename(const char* from, const char* to){
 	printf("Process ID:%d Diskname:%s Method:%s From:%s To:%s\n",getpid(), diskname, "rename",from,to);
-	return 0;
-	char request [strlen("rename")+strlen(from)+strlen(to)+3];
+
+
+	char request [strlen("rename")+strlen(from)+2];
+	sprintf(request, "%s %s", "rename", from);
+
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if(request_status_code!=-1){
+		write(servers_sfd[0], to, strlen(to));
+
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
+
+		if(response_code==-1){
+			return -ENOENT;
+		}else{
+			return 0;
+		}
+	}else{
+		printf("%s\n", "rename cant send data to server");
+	}
+	return -ENOENT;
+
+
+/*	char request [strlen("rename")+strlen(from)+strlen(to)+3];
 	sprintf(request, "%s %s %s", "rename", from, to);
 
 	for (int i = 0; i < num_servers-1; i++){
@@ -198,7 +220,7 @@ static int my_rename(const char* from, const char* to){
 			return -errno;
 		}
 	}
-	return 0;
+	return 0;*/
 }
 
 static int my_unlink(const char* path){
@@ -471,8 +493,8 @@ static struct fuse_operations all_methods = {
 	.open		= my_open,
 	.read		= my_read,
 	.write      = my_write,
-	/*.rename     = my_rename,
-	.unlink     = my_unlink,
+	.rename     = my_rename,
+	/*.unlink     = my_unlink,
 	.release    = my_release,
 	.rmdir      = my_rmdir,
 	.mkdir      = my_mkdir,
