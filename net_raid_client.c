@@ -135,7 +135,7 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 static int my_open(const char *path, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n", getpid(),diskname, "open",path);
 
-/*	(void) fi;
+	(void) fi;
 
 	char request [strlen("open")+strlen(path)+2];
 	sprintf(request, "%s %s", "open", path);
@@ -143,14 +143,18 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
 
-
+		if(response_code==-1){
+			return -ENOENT;
+		}else{
+			return 0;
+		}
 	}else{
 		printf("%s\n", "open cant send data to server");
 	}
-
-	return -ENOENT;*/
-
+	return -ENOENT;
 
 
 /*	for (int i = 0; i < num_servers-1; i++){
@@ -166,8 +170,6 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	}
 	
 	return -errno;*/
-
-
 
 
 	if (strcmp(path, hello_path) != 0){
