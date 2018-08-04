@@ -137,15 +137,20 @@ void client_handler(int cfd) {
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
             printf("rmdir: |%s|\n",current_path);
-            
+
             int res = rmdir(current_path);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"mkdir")==0){
+            printf("%s\n", "Server [mkdir] command");
             char* path = get_command_param(buf);
 
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-            int res = mkdir(current_path,0);
+            mode_t mode;
+
+            read(cfd,&mode,sizeof(mode));
+
+            int res = mkdir(current_path,mode);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"create")==0){
             char* path = get_command_param(buf);
