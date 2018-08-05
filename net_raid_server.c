@@ -154,19 +154,25 @@ void client_handler(int cfd) {
             sprintf(current_path, "%s%s", param_direction, path);
             mode_t mode;
             read(cfd,&mode,sizeof(mode));
-            
+
             int res = creat(current_path,mode);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"opendir")==0){
+            printf("%s\n", "Server [opendir] command");
+
             char* path = get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-            printf("opendir %s\n", "here1");
-            DIR *dp = opendir(current_path);
-            printf("opendir %s\n", "here2");
 
-            write (cfd, dp, sizeof(DIR*));
-            printf("opendir %s\n", "here3");
+            DIR *dp = opendir(current_path);
+
+            if(dp==NULL){
+                int res=-1;
+                write (cfd, &res, sizeof(res));
+            }else{
+                int res=0;
+                write (cfd, &res, sizeof(res));
+            }
         }else if(strcmp(current_command,"write")==0){
             printf("%s\n", "Server [write] command");
 

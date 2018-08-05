@@ -304,17 +304,25 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 static int my_opendir(const char* path, struct fuse_file_info* fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "opendir",path);
 	(void) fi;
-	return 0;
+
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
-	write(servers_sfd[0], request, strlen(request));
 
-	DIR* dp=NULL;
-	read(servers_sfd[0],dp,sizeof(DIR*));
-	if(dp!=NULL){
-		return 0;
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if(request_status_code!=-1){
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
+
+		if(response_code==-1){
+			return  -ENOENT;
+		}else{
+			return 0;
+		}
+	}else{
+		printf("%s\n", "opendir cant send data to server");
 	}
-	return -errno;
+	return -ENOENT;
 }
 
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
@@ -482,7 +490,7 @@ static struct fuse_operations all_methods = {
 	.unlink     = my_unlink,
 	.create     = my_create,
 	.utimens    = my_utimens,
-	/*.opendir    = my_opendir,*/
+	.opendir    = my_opendir,
 };
 //-----------------------------------------------------------------------------------------
 
