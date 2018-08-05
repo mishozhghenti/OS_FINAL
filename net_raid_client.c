@@ -269,26 +269,36 @@ static int my_releasedir(const char* path, struct fuse_file_info *fi){
 	return 0;
 }
 
+static int my_utimens(const char *path, const struct timespec ts[2]){
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "utimens",path);
+	(void) path;
+	return 0;
+}
+
 static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "create",path);
 	(void) fi;
-	return 0;
-	char request [strlen("create")+strlen(path)+sizeof(mode_t)+3];
-	sprintf(request, "%s %s %d", "create", path,mode);
 
-	for (int i = 0; i < num_servers-1; i++){
-		int request_status_code=write(servers_sfd[i], request, strlen(request));
-		if(request_status_code==0){
-			int res;
-			read(servers_sfd[i],&res,sizeof(int));
-			if (res == -1){
-				return -errno;
-			}
+	char request [strlen("create")+strlen(path)+2];
+	sprintf(request, "%s %s", "create", path);
+	
+	int request_status_code =write(servers_sfd[0], request, strlen(request));
+
+	if(request_status_code!=-1){
+		write(servers_sfd[0],&mode,sizeof(mode));
+
+		int response_code;
+		read(servers_sfd[0],&response_code,sizeof(response_code));
+
+		if(response_code==-1){
+			return response_code;
 		}else{
-			return -errno;
+			return 0;
 		}
-	}	
-	return 0;
+	}else{
+		printf("%s\n", "create cant send data to server");
+	}
+	return -ENOENT;
 }
 
 static int my_opendir(const char* path, struct fuse_file_info* fi){
@@ -470,8 +480,9 @@ static struct fuse_operations all_methods = {
 	.rmdir      = my_rmdir,
 	.mkdir      = my_mkdir,
 	.unlink     = my_unlink,
-	/*.opendir    = my_opendir,
-	.create     = my_create,*/
+	.create     = my_create,
+	.utimens    = my_utimens,
+	/*.opendir    = my_opendir,*/
 };
 //-----------------------------------------------------------------------------------------
 

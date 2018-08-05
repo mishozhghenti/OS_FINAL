@@ -147,11 +147,14 @@ void client_handler(int cfd) {
             int res = mkdir(current_path,mode);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"create")==0){
+            printf("%s\n", "Server [create] command");
+
             char* path = get_command_param(buf);
             char current_path [strlen(param_direction)+strlen(path)+1];
             sprintf(current_path, "%s%s", param_direction, path);
-            int mode = get_mode(buf);
-
+            mode_t mode;
+            read(cfd,&mode,sizeof(mode));
+            
             int res = creat(current_path,mode);
             write (cfd, &res, sizeof(int));
         }else if(strcmp(current_command,"opendir")==0){
