@@ -197,7 +197,6 @@ static int my_unlink(const char* path){
 	if(request_status_code!=-1){
 		int response_code;
 		read(servers_sfd[0],&response_code,sizeof(response_code));
-		printf("unlink response : %d\n", response_code );
 		if(response_code==-1){
 			return -ENOENT;
 		}else{
@@ -344,7 +343,7 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 			write(servers_sfd[0], &offset, sizeof(off_t)); // offset
 			int write_code;
 			read(servers_sfd[0],&write_code,sizeof(write_code));
-			printf("%d\n", write_code);
+			//printf("%d\n", write_code);
 			if(write_code==-1){
 				return  -ENOENT;
 			}else{
