@@ -17,7 +17,9 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <stdarg.h>
 #define true 1
+#define MAX(x,y) ((x>y)?x:y)
 
 char* diskname;
 char* mount_point;
@@ -134,7 +136,24 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	char request [strlen("open")+strlen(path)+2];
 	sprintf(request, "%s %s", "open", path);
 
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+		if(request_status_code!=-1){
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+
+			if(response_code==-1){
+				return -ENOENT;
+			}
+		}else{
+			return -ENOENT;//printf("%s\n", "open cant send data to server");
+		}
+	}
+
+	return 0;
+
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
 		int response_code;
@@ -148,7 +167,7 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	}else{
 		printf("%s\n", "open cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 
 /*	if (strcmp(path, hello_path) != 0){
 		return -ENOENT;
@@ -167,7 +186,27 @@ static int my_rename(const char* from, const char* to){
 	char request [strlen("rename")+strlen(from)+2];
 	sprintf(request, "%s %s", "rename", from);
 
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	for (int i = 0; i < num_servers-1; i++){
+
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+		if(request_status_code!=-1){
+			write(servers_sfd[i], to, strlen(to));
+
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+
+			if(response_code==-1){
+				return -ENOENT;
+			}
+		}else{
+			return -ENOENT;//printf("%s\n", "rename cant send data to server");
+		}
+	}
+
+	return 0;
+
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
 		write(servers_sfd[0], to, strlen(to));
@@ -183,7 +222,7 @@ static int my_rename(const char* from, const char* to){
 	}else{
 		printf("%s\n", "rename cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int my_unlink(const char* path){
@@ -192,6 +231,25 @@ static int my_unlink(const char* path){
 	char request [strlen("unlink")+strlen(path)+2];
 	sprintf(request, "%s %s", "unlink", path);
 
+
+
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+		if(request_status_code!=-1){
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+			if(response_code==-1){
+				return -ENOENT;
+			}
+		}else{
+			return -ENOENT;//printf("%s\n", "unlink cant send data to server");
+		}
+	}
+
+	return 0;
+
+/*
 	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
@@ -205,7 +263,7 @@ static int my_unlink(const char* path){
 	}else{
 		printf("%s\n", "unlink cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int my_release(const char* path, struct fuse_file_info *fi){
@@ -221,6 +279,22 @@ static int my_rmdir(const char* path){
 	char request [strlen("rmdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "rmdir", path);
 
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+		if(request_status_code!=-1){
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+			if(response_code==-1){
+				return response_code;
+			}
+		}else{
+			return -ENOENT;//printf("%s\n", "rmdir cant send data to server");
+		}
+	}
+
+	return 0;
+/*
 	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
@@ -234,7 +308,7 @@ static int my_rmdir(const char* path){
 	}else{
 		printf("%s\n", "rmdir cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int my_mkdir(const char* path, mode_t mode){
@@ -243,6 +317,24 @@ static int my_mkdir(const char* path, mode_t mode){
 	char request [strlen("mkdir")+strlen(path)+2];
 	sprintf(request, "%s %s", "mkdir", path);
 
+	for (int i = 0; i < num_servers-1; i++){
+
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+		if(request_status_code!=-1){
+			write(servers_sfd[i],&mode,sizeof(mode));
+
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+			if(response_code==-1){
+				return response_code;
+			}
+		}else{
+			return -ENOENT;//		printf("%s\n", "rmdir cant send data to server");
+		}
+	}
+	return 0;
+
+/*
 	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
@@ -258,7 +350,7 @@ static int my_mkdir(const char* path, mode_t mode){
 	}else{
 		printf("%s\n", "rmdir cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int my_releasedir(const char* path, struct fuse_file_info *fi){
@@ -280,8 +372,27 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
 	char request [strlen("create")+strlen(path)+2];
 	sprintf(request, "%s %s", "create", path);
+
+	for (int i = 0; i < num_servers-1; i++){
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+		if(request_status_code!=-1){
+			write(servers_sfd[i],&mode,sizeof(mode));
+
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+
+			if(response_code==-1){
+				return response_code;
+			}
+		}else{
+			return -ENOENT; //printf("%s\n", "create cant send data to server");
+		}
+		
+	}
+	return 0;
 	
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
 		write(servers_sfd[0],&mode,sizeof(mode));
@@ -297,7 +408,7 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 	}else{
 		printf("%s\n", "create cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int my_opendir(const char* path, struct fuse_file_info* fi){
@@ -307,7 +418,23 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 	char request [strlen("opendir")+strlen(path)+2];
 	sprintf(request, "%s %s", "opendir", path);
 
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	for (int i = 0; i < num_servers-1; i++){
+
+		int request_status_code =write(servers_sfd[i], request, strlen(request));
+		if(request_status_code!=-1){
+			int response_code;
+			read(servers_sfd[i],&response_code,sizeof(response_code));
+
+			if(response_code==-1){
+				return  -ENOENT;
+			}
+		}else{
+			return  -ENOENT; //printf("%s\n", "opendir cant send data to server");
+		}
+	}
+	return 0;
+
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if(request_status_code!=-1){
 		int response_code;
@@ -321,17 +448,100 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 	}else{
 		printf("%s\n", "opendir cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 }
 
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
-	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path,buf);
+	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "write",path, buf);
 	(void) fi;
-
 	char request [strlen("write")+strlen(path)+2];
 	sprintf(request, "%s %s", "write", path);
+	int write_code=-1;	
 
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	if(raid==1){
+
+		for (int i = 0; i < num_servers-1; i++){
+
+			int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+			if (request_status_code!=-1){
+				int open_code;
+				read(servers_sfd[i],&open_code,sizeof(open_code));
+
+				if(open_code!=-1){ // OPEN File OK
+					write(servers_sfd[i], buf, strlen(buf)); // buf
+					write(servers_sfd[i], &size, sizeof(size_t)); // size
+					write(servers_sfd[i], &offset, sizeof(off_t)); // offset
+
+					read(servers_sfd[i],&write_code,sizeof(write_code));
+					if(write_code==-1){
+						return  -ENOENT;
+					}
+				}else{
+					return -ENOENT;
+				}
+			}else{
+				return -ENOENT;//printf("%s\n", "read cant send data to server");
+			}
+		}
+		return write_code;
+	}else if(raid==5){
+		int stripe_size= size/(num_servers-2); // not hotswap included
+		char* current_xor="";
+
+		for (int i = 0; i < num_servers-2;i++){
+			char *current_stripes =	get_sub_string(buf,i*stripe_size,(i+1)*stripe_size-1);
+			// send to servers
+			int request_status_code =write(servers_sfd[i], request, strlen(request));
+
+			if (request_status_code!=-1){
+				int open_code;
+				read(servers_sfd[i],&open_code,sizeof(open_code));
+
+				if(open_code!=-1){ 
+					write(servers_sfd[i], current_stripes, strlen(current_stripes)); // current chunk
+					write(servers_sfd[i], &stripe_size, sizeof(size_t)); 
+					write(servers_sfd[i], &offset, sizeof(off_t));
+
+					read(servers_sfd[i],&write_code,sizeof(write_code));
+					if(write_code==-1){
+						return  -ENOENT;
+					}
+				}else{
+					return -ENOENT;
+				}
+			}else{
+				return -ENOENT;
+			}
+			current_xor=two_strings_xor(current_xor,current_stripes);
+		}
+
+		// send parity to server
+		int request_status_code =write(servers_sfd[num_servers-1], request, strlen(request)); // parity XOR
+			if (request_status_code!=-1){
+				int open_code;
+				read(servers_sfd[num_servers-1],&open_code,sizeof(open_code));
+				size_t xor_size = strlen(current_xor);
+
+				if(open_code!=-1){
+					write(servers_sfd[num_servers-1], current_xor, strlen(current_xor)); // XOR
+					write(servers_sfd[num_servers-1], &xor_size, sizeof(size_t)); 
+					write(servers_sfd[num_servers-1], &offset, sizeof(off_t));
+
+					read(servers_sfd[num_servers-1],&write_code,sizeof(write_code));
+					if(write_code==-1){
+						return  -ENOENT;
+					}
+				}else{
+					return -ENOENT;
+				}
+			}else{
+				return -ENOENT;
+			}
+		return write_code;
+	}
+	return 0;
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if (request_status_code!=-1){
 		int open_code;
@@ -356,7 +566,7 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 		printf("%s\n", "read cant send data to server");
 	}
 
-	return -ENOENT;
+	return -ENOENT;*/
 
 
 /*	int raid_1_used_counter=0;
@@ -411,11 +621,99 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 	printf("Process ID:%d Diskname:%s Method:%s PATH:%s Buf:%s\n",getpid(), diskname, "read",path,buf);
 	(void) fi;
-
+	int res=-1;
 	char request [strlen("read")+strlen(path)+2];
 	sprintf(request, "%s %s", "read", path);
 
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
+	if(raid==1){
+		for (int i = 0; i < num_servers-1; i++){
+			int request_status_code =write(servers_sfd[i], request, strlen(request));
+			
+			if (request_status_code!=-1){
+				int open_code;
+				read(servers_sfd[i],&open_code,sizeof(open_code));
+
+				if(open_code!=-1){ // OPEN OK
+
+					write(servers_sfd[i], &size, sizeof(size_t)); // size
+					write(servers_sfd[i], &offset, sizeof(off_t)); // offset
+
+					int read_code;
+					read(servers_sfd[i],&read_code,sizeof(read_code));
+
+					if(read_code==-1){
+						return  -ENOENT;
+					}else{
+						char result[1024];
+						int data_size = read (servers_sfd[i], &result, 1024);
+						result[data_size]='\0';
+						memcpy(buf,result,strlen(result));
+						res=strlen(result);
+						//return strlen(result);
+					}
+				}else{
+					return -ENOENT;
+				}
+			}else{
+				return -ENOENT;
+			}
+		}
+		return res;
+	}else if(raid==5){
+		int stripe_size= size/(num_servers-2);
+		size_t res=0;
+
+		char* res_buf="";
+
+		for (int i = 0; i < num_servers-1; i++){
+			int request_status_code =write(servers_sfd[i], request, strlen(request));
+			
+			if (request_status_code!=-1){
+				int open_code;
+				read(servers_sfd[i],&open_code,sizeof(open_code));
+
+				if(open_code!=-1){
+
+					write(servers_sfd[i], &stripe_size, sizeof(size_t)); 
+					write(servers_sfd[i], &offset, sizeof(off_t));
+
+					int read_code;
+					read(servers_sfd[i],&read_code,sizeof(read_code));
+
+					if(read_code==-1){
+						return  -ENOENT;
+					}else{
+						char result[1024];
+						int data_size = read (servers_sfd[i], &result, 1024);
+						result[data_size]='\0';
+
+						char* current_buf="";
+						memcpy(current_buf,result,strlen(result));
+
+						if(i==num_servers-2){
+							printf("Parity: XOR: |%s|\n", current_buf);
+						}else{
+							res_buf= realloc(res_buf,strlen(res_buf)+strlen(current_buf));
+
+							memcpy(&res_buf[strlen(result)],current_buf,strlen(result));
+
+							res+=strlen(result);
+						}
+					}
+				}else{
+					return -ENOENT;
+				}
+			}else{
+				return -ENOENT;
+			}
+		}
+		return res;
+	}
+
+	return -ENOENT;
+
+
+/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
 
 	if (request_status_code!=-1){
 			int open_code;
@@ -444,18 +742,8 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 	}else{
 		printf("%s\n", "read cant send data to server");
 	}
-	return -ENOENT;
+	return -ENOENT;*/
 
-	/*return 0;
-	size_t len;
-	if(raid==1){
-		printf("read %s\n", "raind 1");
-		
-	}else if(raid==5){
-		printf("read %s\n", "raid 5");
-
-	}
-	return size;*/
 
 /*	size_t len;
 
@@ -494,6 +782,11 @@ static struct fuse_operations all_methods = {
 //-----------------------------------------------------------------------------------------
 
 int main(int argc, char **argv){
+
+	/*char* s= XOR("hello","");
+	printf("%s\n", s);
+	return 0;*/
+
 	/*printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
 	return 0;*/
@@ -665,7 +958,7 @@ int main(int argc, char **argv){
 				sprintf(msg, "%s mountpointing to: %s", diskname, mount_point);
 				log_message(msg);
 				
-				int fuse_code = fuse_main(argc, new_argv, &all_methods, NULL);   // TODO return -1 if can not mountain
+				int fuse_code = fuse_main(argc, new_argv, &all_methods, NULL);   // return -1 if can not mountain
 
 				if(fuse_code!=0){
 					char fuse_msg [strlen(diskname)+strlen(mount_point)+27];

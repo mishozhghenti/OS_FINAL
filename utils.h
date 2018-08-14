@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 
 
 int string_to_int(char* s){
@@ -245,6 +246,44 @@ char* get_read_buff(char* s){
 	}
 	return res;
 }
+char* get_sub_string(const char* s, int start,int end){
+	char * new_s= strdup(s);
+	new_s[end+1]='\0';
+	return &new_s[start];
+}
+
+char* two_strings_xor(char* s1,char* s2){
+	char* res= NULL;
+	if(strlen(s1)>strlen(s2)){
+		res =strdup(s1);
+	}else{
+		res=strdup(s2);
+	}
+
+	for (int i = 0; i < strlen(res);i++){
+		if(i<=strlen(s1) && i<strlen(s2)){
+			char c1=s1[i];
+			char c2 = s2[i];
+			res[i]=c1^c2;
+		}
+	}
+	return res;
+}
+
+
+char* XOR(char* arg1, ...){
+  va_list ap;
+  char* i;
+  char* res="";
+  va_start(ap, arg1); 
+  for (i = arg1; i !=NULL; i = va_arg(ap, char*)){
+  	res = two_strings_xor(res,i);
+	}
+  
+  va_end(ap);
+  return res;
+}
+
 
 
 

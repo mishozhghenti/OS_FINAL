@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/ip.h> /* superset of previous */
+#include <netinet/ip.h>
 #include <unistd.h>
 #include "utils.h"
 #include <fcntl.h>
@@ -228,6 +228,7 @@ void client_handler(int cfd) {
 
 
 int main(int argc, char **argv){
+
 	if(argc!=4){
 		printf("Wrong parameters.\nYou should only pass: IP, PORT and Storage Direction.\n");
 		return -1;
@@ -247,20 +248,25 @@ int main(int argc, char **argv){
  	int sfd, cfd;
     struct sockaddr_in addr;
     struct sockaddr_in peer_addr;
-    int port = string_to_int(param_port); // 5000 
+    int port = string_to_int(param_port);
 
     sfd = socket(AF_INET, SOCK_STREAM, 0);
     int optval = 1;
     setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
+
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     listen(sfd, BACKLOG);
+
     printf("\nStarting Server (%s:%s) Listening...\n\n",param_ip,param_port);
+
     while (true){
         int peer_addr_size = sizeof(struct sockaddr_in);
+
         cfd = accept(sfd, (struct sockaddr *) &peer_addr, &peer_addr_size);
+
         switch(fork()) {
             case -1:
                 return -1; // error
@@ -272,6 +278,8 @@ int main(int argc, char **argv){
                 close(cfd);
         }
     }
+
     close(sfd);
+
 	return 0;
 }
