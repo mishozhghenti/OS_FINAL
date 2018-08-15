@@ -148,6 +148,6 @@ void logger_deinit();
 ```txt
 [Wed Aug 15 03:24:46 2018] STORAGE1 mountpointing to: /home/misho/Desktop/a1
 ```
-
+logger_deinit() - კი დესტრუქტორის ფუნქციას ასრულებს. გამოყოფილ მეხსიერებას ასუფთავებს.
 
 
