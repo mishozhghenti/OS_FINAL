@@ -783,43 +783,6 @@ static struct fuse_operations all_methods = {
 
 int main(int argc, char **argv){
 
-	/*char* s= XOR("hello","");
-	printf("%s\n", s);
-	return 0;*/
-
-	/*printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
-	printf("%d\n", socket(AF_INET, SOCK_STREAM, 0));
-	return 0;*/
-
-
-	/*logger_init("log.txt");
-	log_message("1");
-	log_message("message 2");
-	log_message("random message for now :)))");
-	logger_deinit();
-	return 0;*/
-
- /*	int sfd;
-    struct sockaddr_in addr;
-    int ip;
-    char buf[1024];
-    sfd = socket(AF_INET, SOCK_STREAM, 0);
-    inet_pton(AF_INET, "127.0.0.1", &ip);
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(10001);
-    addr.sin_addr.s_addr = ip;
-
-    connect(sfd, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
-    printf("%s\n", "woke up");
-    write(sfd, "qwe", 3);
-    read(sfd, &buf, 3);
-    printf("This is client: response%s\n", buf);
-    sleep(600);
-    close(sfd);
-
-    return 0;*/
-
 	if(argc<2){
 		printf("Wrong parameters.\nYou should only pass: Configuration File Direction\n");
 		return 0;
@@ -893,14 +856,6 @@ int main(int argc, char **argv){
 				printf("%s start %d\n", "___________________",getpid());
 				// FOR loop tries connecting to server
 				for (int i = 0; i < num_servers; i++){
-					/*char msg [strlen(diskname)+strlen(servers[i].port)+strlen(servers[i].ip)+3];
-					sprintf(msg, "%s %s %s", diskname, servers[i].ip, servers[i].port);
-					log_message(msg);*/
-
-					/*log_message(diskname);
-					log_message(servers[i].ip);
-					log_message(servers[i].port);*/
-
 					
 				    struct sockaddr_in addr;
 				    int ip;
