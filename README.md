@@ -96,7 +96,16 @@ static struct fuse_operations all_methods = {
 ```c
 printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "getattr",path);
 ```
+(ეს მიმარტივებდა DEBUG-ის პროცესს და ლოგირებაშიც მეხმარებოდა)
 
+თითოეული syscall-ის გამოძახებისას კლიენტი ადგენს Request-ს, სადაც წერია syscall-ის სახელი და path.
+ამას ვაკეთებ შემდეგ ნაირიად, მაგალითისთვის:
+```c
+	char request [strlen("getattr")+strlen(path)+2];
+	sprintf(request, "%s %s", "getattr", path);
+
+```
+და ამ request-ს ვგზავნი პირველ ეტაპზე.
 
 
 
