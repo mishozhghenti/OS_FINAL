@@ -102,10 +102,18 @@ printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "geta
 ამას ვაკეთებ შემდეგ ნაირიად, მაგალითისთვის:
 ```c
 	char request [strlen("getattr")+strlen(path)+2];
-	sprintf(request, "%s %s", "getattr", path);
+	sprintf(request, "%s %s", "getattr", path); // sets values
 
 ```
-და ამ request-ს ვგზავნი პირველ ეტაპზე.
+და ამ request-ს ვგზავნი პირველ ეტაპზე.</br>
+
+Server-ზე არის ამ მონაცემის *parser*-ი, რომელიც ადგენს თუ რომელი მეთოდი გამოვიძახოთ და რა პარამეტრით. (path-ის გადაცემა request-ში იმიტომ გადავწყვიტე, რომ ყველა იყენებს, ხოლო სხვა კონკრეტული პარამეტრები კი კომპლექსურია და ზოგი იყენებს, ზოგი - არა, და ამიტომ მათ ეტაპობრივად საჭიროემისამებრ ვგზავნი). </br>
+
+Server-ზე გაწერილია "დიდი IF/ELSE IF/ELSE" სადაც კონკრეტულ syscall-ს ასრულებს და შედეგს უკან კლიენტს უბრუნებს. </br>
+
+
+
+
 
 
 
