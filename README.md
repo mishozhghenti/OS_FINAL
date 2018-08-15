@@ -64,6 +64,32 @@ int servers_sfd [10];
 ```
 connect()-ის გამოძახების შემდეგ ვნახულობ თუ "კავშირზეა" სერვერი. თუ წარმატებით განხორციელდა დაკავშირება **LOG**-ში იწერება შესაბამისი მონაცემ. აღსანიშნავია, რომ აქვე ხდება დაკავშირება **hotswap server**-თან.
 
+სერვერებთან "შეხების" შემდეგ გადავდივართ **mount**-ზე. ვიძახებთ 
+```c 
+fuse_main(argc, new_argv, &all_methods, NULL); 
+```
+თუკი რაიმე პრობლემაა, დირექტორია ვერ იპოვნა, ან იპოვნა და უკვე დამაუნთებულია და სხვა პროცესი იყენებს მაშინ მეთოდი არანულოვანი მნიშვნელობით ბრუნდება და ესეც ილოგება შესაბამისი მესიჯით **LOG** ფაილში. და იდეაში, პროგრამა ამით ასრულებ მუშაობას, რადგან სამუშაოს ასე ვერ შეასრულებს.
+
+ესაა ყველა ის **syscall**-ი, რომელიც გადატვირთულია სისტემაში:
+```c
+static struct fuse_operations all_methods = {
+	.getattr	= my_getattr,
+	.readdir	= my_readdir,
+	.open		= my_open,
+	.read		= my_read,
+	.write      = my_write,
+	.rename     = my_rename,
+	.release    = my_release,
+	.releasedir = my_releasedir,
+	.rmdir      = my_rmdir,
+	.mkdir      = my_mkdir,
+	.unlink     = my_unlink,
+	.create     = my_create,
+	.utimens    = my_utimens,
+	.opendir    = my_opendir,
+};
+```
+
 
 
 
