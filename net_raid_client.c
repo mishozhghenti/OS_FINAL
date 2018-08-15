@@ -59,22 +59,6 @@ static int my_getattr(const char *path, struct stat *stbuf){
 		printf("getattr could not sent data to server \n");
 	}
 	return -ENOENT;
-
-/*	int res = 0;
-
-	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path, hello_path) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(hello_str);
-	} else{
-		res = -ENOENT;
-	}
-
-	return res;*/
 }
 
 static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi){
@@ -113,20 +97,6 @@ static int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 		printf("%s\n", "readdir cant send data to server");
 	}
 	return -ENOENT;
-
-/*	(void) offset;
-	(void) fi;
-
-	if (strcmp(path, "/") != 0){
-		printf("retunred readdir %s\n","here" );
-		return -ENOENT;
-	}
-
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-	filler(buf, hello_path + 1, NULL, 0);
-
-	return 0;*/
 }
 
 static int my_open(const char *path, struct fuse_file_info *fi){
@@ -152,31 +122,6 @@ static int my_open(const char *path, struct fuse_file_info *fi){
 	}
 
 	return 0;
-
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-
-		if(response_code==-1){
-			return -ENOENT;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "open cant send data to server");
-	}
-	return -ENOENT;*/
-
-/*	if (strcmp(path, hello_path) != 0){
-		return -ENOENT;
-	}
-
-	if ((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
-
-	return 0;*/
 }
 
 
@@ -205,24 +150,6 @@ static int my_rename(const char* from, const char* to){
 	}
 
 	return 0;
-
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		write(servers_sfd[0], to, strlen(to));
-
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-
-		if(response_code==-1){
-			return -ENOENT;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "rename cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int my_unlink(const char* path){
@@ -248,22 +175,6 @@ static int my_unlink(const char* path){
 	}
 
 	return 0;
-
-/*
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-		if(response_code==-1){
-			return -ENOENT;
-		}else{
-			return response_code;
-		}
-	}else{
-		printf("%s\n", "unlink cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int my_release(const char* path, struct fuse_file_info *fi){
@@ -294,21 +205,6 @@ static int my_rmdir(const char* path){
 	}
 
 	return 0;
-/*
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-		if(response_code==-1){
-			return response_code;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "rmdir cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int my_mkdir(const char* path, mode_t mode){
@@ -333,24 +229,6 @@ static int my_mkdir(const char* path, mode_t mode){
 		}
 	}
 	return 0;
-
-/*
-	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		write(servers_sfd[0],&mode,sizeof(mode));
-
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-		if(response_code==-1){
-			return response_code;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "rmdir cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int my_releasedir(const char* path, struct fuse_file_info *fi){
@@ -391,24 +269,6 @@ static int my_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 		
 	}
 	return 0;
-	
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		write(servers_sfd[0],&mode,sizeof(mode));
-
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-
-		if(response_code==-1){
-			return response_code;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "create cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int my_opendir(const char* path, struct fuse_file_info* fi){
@@ -433,22 +293,6 @@ static int my_opendir(const char* path, struct fuse_file_info* fi){
 		}
 	}
 	return 0;
-
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if(request_status_code!=-1){
-		int response_code;
-		read(servers_sfd[0],&response_code,sizeof(response_code));
-
-		if(response_code==-1){
-			return  -ENOENT;
-		}else{
-			return 0;
-		}
-	}else{
-		printf("%s\n", "opendir cant send data to server");
-	}
-	return -ENOENT;*/
 }
 
 static int  my_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
@@ -541,81 +385,6 @@ static int  my_write(const char *path, const char *buf, size_t size, off_t offse
 		return write_code;
 	}
 	return 0;
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if (request_status_code!=-1){
-		int open_code;
-		read(servers_sfd[0],&open_code,sizeof(open_code));
-
-		if(open_code!=-1){ // OPEN File OK
-			write(servers_sfd[0], buf, strlen(buf)); // buf
-			write(servers_sfd[0], &size, sizeof(size_t)); // size
-			write(servers_sfd[0], &offset, sizeof(off_t)); // offset
-			int write_code;
-			read(servers_sfd[0],&write_code,sizeof(write_code));
-			//printf("%d\n", write_code);
-			if(write_code==-1){
-				return  -ENOENT;
-			}else{
-				return write_code;
-			}
-		}else{
-			return -ENOENT;
-		}
-	}else{
-		printf("%s\n", "read cant send data to server");
-	}
-
-	return -ENOENT;*/
-
-
-/*	int raid_1_used_counter=0;
-	if(raid==1){
-		printf("write %s\n", "raind 1");
-
-		char request [strlen("write")+sizeof(size_t)+strlen(buf)+strlen(path)+sizeof(int)+5];
-		sprintf(request, "%s %zu %s %s %d", "write", size,buf,path,(int)offset);
-
-		for (int i = 0; i < num_servers-1; ++i){
-			int request_status_code=write(servers_sfd[i], request, strlen(request));
-
-			if (request_status_code==0){  // sent
-				int res;
-				read(servers_sfd[i],&res,sizeof(int));
-				if(res==-1){
-					return -errno;
-				}
-			}else{
-				raid_1_used_counter++;
-				if(raid_1_used_counter==2){
-					return -errno;
-				}
-				// hotswap
-				int hotswap_request_status_code=write(servers_sfd[num_servers-1], request, strlen(request));
-
-				if (hotswap_request_status_code==0){  // sent
-					char hotswap_msg [strlen(diskname)+33];
-					sprintf(hotswap_msg, "%s hotswap server has been reached", diskname);
-					log_message(hotswap_msg);
-					
-					int res;
-					read(servers_sfd[num_servers-1],&res,sizeof(int));
-					if(res==-1){
-						return -errno;
-					}
-				}else {
-					// hotswap is not available
-					char hotswap_msg [strlen(diskname)+33];
-					sprintf(hotswap_msg, "%s hotswap server is not reachable", diskname);
-					log_message(hotswap_msg);
-				}
-			}
-		}
-		return 0;
-	}else if(raid==5){
-		printf("write %s\n", "raid 5");
-	}
-	return 0;*/
 }
 
 static int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
@@ -711,56 +480,6 @@ static int my_read(const char *path, char *buf, size_t size, off_t offset, struc
 	}
 
 	return -ENOENT;
-
-
-/*	int request_status_code =write(servers_sfd[0], request, strlen(request));
-
-	if (request_status_code!=-1){
-			int open_code;
-			read(servers_sfd[0],&open_code,sizeof(open_code));
-
-			if(open_code!=-1){ // OPEN OK
-
-				write(servers_sfd[0], &size, sizeof(size_t)); // size
-				write(servers_sfd[0], &offset, sizeof(off_t)); // offset
-
-				int read_code;
-				read(servers_sfd[0],&read_code,sizeof(read_code));
-
-				if(read_code==-1){
-					return  -ENOENT;
-				}else{
-					char result[1024];
-					int data_size = read (servers_sfd[0], &result, 1024);
-					result[data_size]='\0';
-					memcpy(buf,result,strlen(result));
-					return strlen(result);
-				}
-			}else{
-				return -ENOENT;
-			}
-	}else{
-		printf("%s\n", "read cant send data to server");
-	}
-	return -ENOENT;*/
-
-
-/*	size_t len;
-
-	if(strcmp(path, hello_path) != 0){
-		return -ENOENT;
-	}
-
-	len = strlen(hello_str);
-	if (offset < len) {
-		if (offset + size > len){
-			size = len - offset;
-		}
-		memcpy(buf, hello_str + offset, size);
-	} else
-		size = 0;
-
-	return size;*/
 }
 
 static struct fuse_operations all_methods = {
