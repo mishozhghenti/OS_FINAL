@@ -90,6 +90,14 @@ static struct fuse_operations all_methods = {
 };
 ```
 
+*სერვერთან კომუნიკაციის პროტოკოლი* </br>
+თითოეულ გადატვირთულ მეთოდში *printf()*-ით console-ში ვბეჭდავ კონკრეტული მეთოდის სახელს, პროცესის ID-ს და სხვა პარამეტრებს, რომლებიც გადმოეცემა.
+მაგალითისთვის ასეთი ფორმტატით იქნება *getattr*-ის შემთხვევაში:
+```c
+printf("Process ID:%d Diskname:%s Method:%s PATH:%s\n",getpid(), diskname, "getattr",path);
+```
+
+
 
 
 
