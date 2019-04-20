@@ -1,7 +1,9 @@
 # OS_FINAL: Network Filesystem
 
 Mikheil Zhghenti   mzhgh14@freeuni.edu.ge
-
+<hr>
+Network file system supports Raid 1 and Raid 5 distributions. Implemented client and server sides written in C, both from scratches. Uses Fuse library for implementing kernel system calls in user space. In this way client is able to distribute a data among the servers. The project includes errors handling during the system calls and  logging support. 
+<hr>
 
 პროექტი კომპილირდება **make**-ს საშუალებით. </br>
 ქსელურ ფაილურ სისტემას აქვს ორი ძირითადი კომპონენტი - ესენია: კლიენტი და სერვერი. 
